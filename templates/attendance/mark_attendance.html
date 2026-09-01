@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load attendance_tags %}
+
+{% block title %}Mark Attendance - SMS{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="bi bi-clipboard-check text-primary me-2"></i>Daily Attendance Marker
+        </h2>
+        <p class="text-muted mb-0 small">Select a course and session date to log student presence, absence, or tardiness.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'attendance:attendance_history' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-clock-history me-1"></i> Attendance Logs
+        </a>
+        <a href="{% url 'attendance:attendance_report' %}" class="btn btn-outline-info btn-sm rounded-pill px-3">
+            <i class="bi bi-file-earmark-bar-graph me-1"></i> Reports
+        </a>
+    </div>
+</div>
+
+<!-- Selection Form Card -->
+<div class="card card-custom p-4 bg-white mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label fw-semibold small text-dark"><i class="bi bi-journal-bookmark me-1 text-primary"></i>Academic Course <span class="text-danger">*</span></label>
+            {{ selection_form.course }}
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold small text-dark"><i class="bi bi-calendar-event me-1 text-primary"></i>Lecture Date <span class="text-danger">*</span></label>
+            {{ selection_form.date }}
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100 fw-medium">
+                <i class="bi bi-people-fill me-1"></i> Load Roster
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if selected_course %}
+    <!-- Active Course Banner -->
+    <div class="card card-custom p-3 bg-white mb-4 border-start border-4 border-primary">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">
+                    {{ selected_course.title }} ({{ selected_course.course_code }})
+                </h5>
+                <div class="d-flex flex-wrap gap-2 align-items-center small">
+                    <span class="badge bg-light text-primary border border-primary border-opacity-25">{{ selected_course.department.name }}</span>
+                    <span class="badge bg-light text-dark border"><i class="bi bi-door-open me-1"></i>{{ selected_course.classroom|default:'Open / Cross-Class' }}</span>
+                    <span class="badge bg-info bg-opacity-10 text-dark"><i class="bi bi-calendar3 me-1"></i>{{ selected_date|date:"l, F d, Y" }}</span>
+                    <span class="badge bg-success bg-opacity-10 text-success"><i class="bi bi-people me-1"></i>{{ enrolled_students|length }} Enrolled Student{{ enrolled_students|length|pluralize }}</span>
+                </div>
+            </div>
+            {% if has_existing_records %}
+            <div>
+                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning px-3 py-2">
+                    <i class="bi bi-info-circle-fill me-1 text-warning"></i> Editing Saved Attendance for this Date
+                </span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Student Attendance Form -->
+    <div class="card card-custom p-4 bg-white mb-4">
+        {% if enrolled_students %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="course" value="{{ selected_course.id }}">
+            <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+            <input type="hidden" name="save_attendance" value="1">
+
+            <!-- Quick Batch Fill Buttons -->
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3 pb-3 border-bottom">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-person-check me-2 text-primary"></i>Student Roll Call</h5>
+                    <span class="text-muted small">Mark each student's attendance status and add optional notes.</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="setAllStatuses('PRESENT')">
+                        <i class="bi bi-check-all me-1"></i> All Present
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="setAllStatuses('ABSENT')">
+                        <i class="bi bi-x me-1"></i> All Absent
+                    </button>
+                </div>
+            </div>
+
+            <!-- Attendance Table -->
+            <div class="table-responsive mb-4">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3" style="width: 140px;">Admission #</th>
+                            <th>Student Information</th>
+                            <th>Class / Roll</th>
+                            <th style="min-width: 320px;">Attendance Status</th>
+                            <th style="min-width: 200px;">Remarks (Optional)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in enrolled_students %}
+                        {% with record=attendance_dict|dict_lookup:student.id %}
+                        <tr>
+                            <td class="ps-3">
+                                <span class="badge bg-light text-primary border border-primary border-opacity-25 font-monospace fw-bold">
+                                    {{ student.admission_number }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if student.user.profile_picture %}
+                                        <img src="{{ student.user.profile_picture.url }}" alt="" class="rounded-circle me-2 border" style="width: 32px; height: 32px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-person-fill"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <a href="{% url 'students:student_detail' student.pk %}" class="fw-semibold text-dark text-decoration-none d-block">
+                                            {{ student.user.get_full_name|default:student.user.username }}
+                                        </a>
+                                        <span class="text-muted small">{{ student.user.email }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ student.classroom|default:'General' }}</span>
+                                {% if student.roll_number %}
+                                <span class="text-muted small d-block mt-1">Roll: {{ student.roll_number }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <!-- Radio Group for Status -->
+                                <div class="btn-group btn-group-sm w-100" role="group">
+                                    <!-- Present -->
+                                    <input type="radio" class="btn-check status-radio" name="status_{{ student.id }}" id="present_{{ student.id }}" value="PRESENT"
+                                           {% if record %}{% if record.status == 'PRESENT' %}checked{% endif %}{% else %}checked{% endif %}>
+                                    <label class="btn btn-outline-success" for="present_{{ student.id }}">
+                                        <i class="bi bi-check-circle me-1"></i> Present
+                                    </label>
+
+                                    <!-- Absent -->
+                                    <input type="radio" class="btn-check status-radio" name="status_{{ student.id }}" id="absent_{{ student.id }}" value="ABSENT"
+                                           {% if record and record.status == 'ABSENT' %}checked{% endif %}>
+                                    <label class="btn btn-outline-danger" for="absent_{{ student.id }}">
+                                        <i class="bi bi-x-circle me-1"></i> Absent
+                                    </label>
+
+                                    <!-- Late -->
+                                    <input type="radio" class="btn-check status-radio" name="status_{{ student.id }}" id="late_{{ student.id }}" value="LATE"
+                                           {% if record and record.status == 'LATE' %}checked{% endif %}>
+                                    <label class="btn btn-outline-warning" for="late_{{ student.id }}">
+                                        <i class="bi bi-clock me-1"></i> Late
+                                    </label>
+
+                                    <!-- Excused -->
+                                    <input type="radio" class="btn-check status-radio" name="status_{{ student.id }}" id="excused_{{ student.id }}" value="EXCUSED"
+                                           {% if record and record.status == 'EXCUSED' %}checked{% endif %}>
+                                    <label class="btn btn-outline-info" for="excused_{{ student.id }}">
+                                        <i class="bi bi-shield-check me-1"></i> Excused
+                                    </label>
+                                </div>
+                            </td>
+                            <td>
+                                <input type="text" name="remarks_{{ student.id }}" class="form-control form-control-sm bg-light"
+                                       value="{{ record.remarks|default:'' }}" placeholder="Optional notes...">
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <a href="{% url 'attendance:attendance_dashboard' %}" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm">
+                    <i class="bi bi-check2-circle me-1"></i> Save Attendance Record
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-people fs-1 d-block mb-3 text-secondary"></i>
+            <h5>No Active Students Enrolled in this Course</h5>
+            <p class="small text-muted mb-3">To mark attendance, enroll students into <strong>{{ selected_course.course_code }}</strong> first.</p>
+            {% if user.is_superuser or user.role == 'ADMIN' %}
+            <a href="{% url 'courses:course_enroll_students' selected_course.pk %}" class="btn btn-primary btn-sm rounded-pill px-4">
+                <i class="bi bi-person-plus me-1"></i> Enroll Students Now
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+{% else %}
+    <div class="card card-custom p-5 bg-white text-center text-muted">
+        <i class="bi bi-arrow-up-circle fs-1 d-block mb-3 text-primary"></i>
+        <h5 class="fw-bold text-dark">Select a Course to Begin Roll Call</h5>
+        <p class="small mb-0">Pick an academic course and lecture date in the box above, then click <strong>"Load Roster"</strong> to start marking student attendance.</p>
+    </div>
+{% endif %}
+
+<!-- JavaScript Helper for Quick Bulk Toggling -->
+<script>
+    function setAllStatuses(statusValue) {
+        const radios = document.querySelectorAll('.status-radio');
+        radios.forEach(radio => {
+            if (radio.value === statusValue) {
+                radio.checked = true;
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,497 @@
+/* ==========================================================================
+   Student Management System - Master Theme Stylesheet (Phase 18 UI Polish)
+   ========================================================================== */
+
+:root {
+    --sms-primary: #1e40af;       /* Deep Vibrant Blue */
+    --sms-primary-hover: #1e3a8a;
+    --sms-primary-light: #dbeafe;
+    --sms-secondary: #0284c7;     /* Sky Blue */
+    --sms-accent: #f59e0b;        /* Warm Amber */
+    --sms-success: #10b981;       /* Emerald Green */
+    --sms-danger: #ef4444;        /* Crimson Red */
+    --sms-info: #06b6d4;          /* Cyan */
+    --sms-dark: #0f172a;          /* Slate Dark */
+    --sms-sidebar-bg: #1e293b;    /* Slate Navy */
+    --sms-sidebar-text: #94a3b8;
+    --sms-sidebar-active: #ffffff;
+    --sms-bg-light: #f8fafc;      /* Soft Canvas */
+    --sms-card-bg: #ffffff;
+    --sms-card-border: #e2e8f0;
+    --sms-card-hover-border: #cbd5e1;
+    --sms-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --sms-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --sms-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    --sms-radius-sm: 8px;
+    --sms-radius-md: 12px;
+    --sms-radius-lg: 16px;
+    --sms-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   Base & Typography
+   ========================================================================== */
+body {
+    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--sms-bg-light);
+    color: #334155;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #0f172a;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+a {
+    color: var(--sms-primary);
+    text-decoration: none;
+    transition: var(--sms-transition);
+}
+
+a:hover {
+    color: var(--sms-primary-hover);
+}
+
+/* ==========================================================================
+   Top Navbar
+   ========================================================================== */
+.sms-navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--sms-card-border);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    height: 64px;
+    z-index: 1030;
+}
+
+.sms-brand-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--sms-primary);
+}
+
+/* ==========================================================================
+   App Layout & Sidebar
+   ========================================================================== */
+.app-wrapper {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 64px);
+}
+
+.app-sidebar {
+    width: 260px;
+    background-color: var(--sms-sidebar-bg);
+    color: var(--sms-sidebar-text);
+    flex-shrink: 0;
+    transition: var(--sms-transition);
+    display: flex;
+    flex-direction: column;
+    z-index: 1020;
+}
+
+.app-content {
+    flex: 1;
+    padding: 1.75rem 2rem;
+    background-color: var(--sms-bg-light);
+    overflow-x: hidden;
+}
+
+.sidebar-heading {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: #64748b;
+    padding: 1rem 1.25rem 0.4rem;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav .nav-item {
+    margin: 2px 10px;
+}
+
+.sidebar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.65rem 0.9rem;
+    color: var(--sms-sidebar-text);
+    border-radius: var(--sms-radius-sm);
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: var(--sms-transition);
+    text-decoration: none;
+}
+
+.sidebar-nav .nav-link i {
+    font-size: 1.15rem;
+    margin-right: 0.75rem;
+    width: 22px;
+    text-align: center;
+    color: #94a3b8;
+    transition: var(--sms-transition);
+}
+
+.sidebar-nav .nav-link:hover {
+    color: var(--sms-sidebar-active);
+    background-color: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar-nav .nav-link:hover i {
+    color: #38bdf8;
+}
+
+.sidebar-nav .nav-link.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.sidebar-nav .nav-link.active i {
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   Cards & Elevated Panels
+   ========================================================================== */
+.card-custom {
+    background-color: var(--sms-card-bg);
+    border: 1px solid var(--sms-card-border);
+    border-radius: var(--sms-radius-md);
+    box-shadow: var(--sms-shadow-sm);
+    transition: var(--sms-transition);
+}
+
+.card-custom:hover {
+    border-color: var(--sms-card-hover-border);
+    box-shadow: var(--sms-shadow-md);
+}
+
+.card-header-custom {
+    background-color: transparent;
+    border-bottom: 1px solid var(--sms-card-border);
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ==========================================================================
+   KPI Stat Metric Cards
+   ========================================================================== */
+.stat-card {
+    background-color: #ffffff;
+    border: 1px solid var(--sms-card-border);
+    border-radius: var(--sms-radius-md);
+    padding: 1.25rem;
+    box-shadow: var(--sms-shadow-sm);
+    transition: var(--sms-transition);
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sms-shadow-md);
+    border-color: #cbd5e1;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+}
+
+/* ==========================================================================
+   Soft Badges & Role Badges
+   ========================================================================== */
+.badge-soft-primary {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-soft-success {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.badge-soft-danger {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.badge-soft-warning {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+
+.badge-soft-info {
+    background-color: #cffafe;
+    color: #0e7490;
+}
+
+.badge-soft-secondary {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.badge-role-admin {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+
+.badge-role-teacher {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.badge-role-student {
+    background-color: #10b981;
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   Modern Table Styling
+   ========================================================================== */
+.table-card {
+    border-radius: var(--sms-radius-md);
+    overflow: hidden;
+    border: 1px solid var(--sms-card-border);
+    background-color: #ffffff;
+    box-shadow: var(--sms-shadow-sm);
+}
+
+.table-custom {
+    margin-bottom: 0;
+}
+
+.table-custom thead th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--sms-card-border);
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+}
+
+.table-custom tbody td {
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+.table-custom tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table-custom tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* ==========================================================================
+   Empty State Component
+   ========================================================================== */
+.empty-state {
+    padding: 3.5rem 1.5rem;
+    text-align: center;
+    background-color: #ffffff;
+    border-radius: var(--sms-radius-md);
+    border: 1px dashed var(--sms-card-border);
+}
+
+.empty-state-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background-color: #f1f5f9;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 1.25rem;
+}
+
+.empty-state-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+    font-size: 0.9rem;
+    color: #64748b;
+    max-width: 420px;
+    margin: 0 auto 1.5rem;
+}
+
+/* ==========================================================================
+   Search & Filter Cards
+   ========================================================================== */
+.filter-card {
+    background-color: #ffffff;
+    border: 1px solid var(--sms-card-border);
+    border-radius: var(--sms-radius-md);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--sms-shadow-sm);
+}
+
+.search-input-group .input-group-text {
+    background-color: #f8fafc;
+    border-right: none;
+    color: #64748b;
+}
+
+.search-input-group .form-control {
+    border-left: none;
+}
+
+.search-input-group .form-control:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+}
+
+/* ==========================================================================
+   Form Styling & Validation Messaging
+   ========================================================================== */
+.form-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #1e293b;
+    margin-bottom: 0.35rem;
+}
+
+.form-control, .form-select {
+    border-radius: var(--sms-radius-sm);
+    border: 1px solid #cbd5e1;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9rem;
+    color: #0f172a;
+    transition: var(--sms-transition);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--sms-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.invalid-feedback {
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin-top: 0.35rem;
+}
+
+.form-text {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+.required-star {
+    color: var(--sms-danger);
+    font-weight: bold;
+}
+
+/* ==========================================================================
+   Responsive Drawer & Breakpoints
+   ========================================================================== */
+@media (max-width: 991.98px) {
+    .app-sidebar {
+        position: fixed;
+        top: 64px;
+        bottom: 0;
+        left: -260px;
+        z-index: 1020;
+    }
+    
+    .app-sidebar.show {
+        left: 0;
+        box-shadow: 6px 0 25px rgba(15, 23, 42, 0.25);
+    }
+    
+    .sidebar-backdrop {
+        position: fixed;
+        top: 64px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 1010;
+        display: none;
+    }
+    
+    .sidebar-backdrop.show {
+        display: block;
+    }
+    
+    .app-content {
+        padding: 1.25rem 1rem;
+    }
+}
+
+/* ==========================================================================
+   Print Media Styling (Transcripts, Reports)
+   ========================================================================== */
+@media print {
+    .sms-navbar,
+    .app-sidebar,
+    .sidebar-backdrop,
+    .btn,
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        background-color: #ffffff;
+        color: #000000;
+    }
+
+    .app-content {
+        padding: 0;
+    }
+
+    .card-custom, .stat-card, .table-card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
+}

@@ -1,0 +1,161 @@
+<aside class="app-sidebar" id="appSidebar">
+    <!-- User Overview Pill in Sidebar -->
+    <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex align-items-center">
+        {% if user.profile_picture %}
+            <img src="{{ user.profile_picture.url }}" alt="Avatar" class="rounded-circle me-2 border border-2 border-primary" style="width: 40px; height: 40px; object-fit: cover;">
+        {% else %}
+            <div class="rounded-circle bg-primary bg-opacity-25 text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                <i class="bi bi-person-fill fs-5 text-info"></i>
+            </div>
+        {% endif %}
+        <div class="overflow-hidden">
+            <div class="fw-semibold text-white text-truncate" style="font-size: 0.9rem;">
+                {{ user.get_full_name|default:user.username }}
+            </div>
+            <span class="badge rounded-pill {% if user.is_superuser or user.role == 'ADMIN' %}badge-role-admin{% elif user.role == 'TEACHER' %}badge-role-teacher{% else %}badge-role-student{% endif %} px-2 py-0" style="font-size: 0.7rem;">
+                {{ user.get_role_display|default:'Admin' }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Navigation Menu Items -->
+    <div class="flex-grow-1 overflow-auto py-2">
+        <ul class="sidebar-nav">
+            <li class="sidebar-heading">Core</li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard:index' %}">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            {% if user.is_superuser or user.role == 'ADMIN' %}
+                <!-- Administrator Modules -->
+                <li class="sidebar-heading">Administration</li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'students' %}active{% endif %}" href="{% url 'students:student_list' %}">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Students</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'teachers' %}active{% endif %}" href="{% url 'teachers:teacher_list' %}">
+                        <i class="bi bi-person-video3"></i>
+                        <span>Teachers</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'courses' and not 'classes' in request.path and not 'enrollments' in request.path %}active{% endif %}" href="{% url 'courses:course_list' %}">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                        <span>Courses</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'courses' and 'classes' in request.path %}active{% endif %}" href="{% url 'courses:classroom_list' %}">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                        <span>Class Rooms</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'courses' and 'enrollments' in request.path %}active{% endif %}" href="{% url 'courses:enrollment_list' %}">
+                        <i class="bi bi-card-checklist"></i>
+                        <span>Enrollments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'attendance' and not 'reports' in request.path %}active{% endif %}" href="{% url 'attendance:attendance_dashboard' %}">
+                        <i class="bi bi-calendar-check-fill"></i>
+                        <span>Attendance Tracker</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'attendance' and 'reports' in request.path %}active{% endif %}" href="{% url 'attendance:attendance_report' %}">
+                        <i class="bi bi-pie-chart-fill"></i>
+                        <span>Attendance Reports</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'academics' and not 'reports' in request.path %}active{% endif %}" href="{% url 'academics:record_list' %}">
+                        <i class="bi bi-award-fill"></i>
+                        <span>Exams & Grades</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'academics' and 'reports' in request.path %}active{% endif %}" href="{% url 'academics:academic_reports' %}">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        <span>Academic Reports</span>
+                    </a>
+                </li>
+            {% elif user.role == 'TEACHER' %}
+                <!-- Teacher Modules -->
+                <li class="sidebar-heading">Teaching Portal</li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard:teacher_dashboard' %}">
+                        <i class="bi bi-journal-check"></i>
+                        <span>My Courses</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'students' %}active{% endif %}" href="{% url 'students:student_list' %}">
+                        <i class="bi bi-person-badge-fill"></i>
+                        <span>Student Directory</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'attendance' and not 'reports' in request.path %}active{% endif %}" href="{% url 'attendance:attendance_dashboard' %}">
+                        <i class="bi bi-clipboard-check-fill"></i>
+                        <span>Attendance Tracker</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'academics' and not 'reports' in request.path %}active{% endif %}" href="{% url 'academics:record_list' %}">
+                        <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+                        <span>Marks Entry</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'academics' and 'reports' in request.path %}active{% endif %}" href="{% url 'academics:academic_reports' %}">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        <span>Performance Reports</span>
+                    </a>
+                </li>
+            {% elif user.role == 'STUDENT' %}
+                <!-- Student Modules -->
+                <li class="sidebar-heading">Student Portal</li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard:student_dashboard' %}">
+                        <i class="bi bi-book-half"></i>
+                        <span>My Enrolled Courses</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'attendance' %}active{% endif %}" href="{% url 'attendance:attendance_dashboard' %}">
+                        <i class="bi bi-calendar2-week-fill"></i>
+                        <span>My Attendance</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'academics' %}active{% endif %}" href="{% url 'academics:record_list' %}">
+                        <i class="bi bi-mortarboard-fill"></i>
+                        <span>Report Card & Grades</span>
+                    </a>
+                </li>
+            {% endif %}
+
+            <li class="sidebar-heading">Account</li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" href="{% url 'accounts:profile' %}">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>Profile Settings</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Sidebar Footer Sign Out -->
+    <div class="p-3 border-top border-secondary border-opacity-25">
+        <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center">
+            <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+        </a>
+    </div>
+</aside>

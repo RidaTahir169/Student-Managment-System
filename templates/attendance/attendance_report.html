@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Summary Reports - SMS{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="bi bi-file-earmark-bar-graph text-primary me-2"></i>Attendance Summary & Analytics
+        </h2>
+        <p class="text-muted mb-0 small">Course-level aggregated attendance rates, session totals, and student rosters.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'attendance:attendance_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-3 fw-medium">
+            <i class="bi bi-speedometer2 me-1"></i> Dashboard
+        </a>
+        <a href="{% url 'attendance:mark_attendance' %}" class="btn btn-primary rounded-pill px-3 shadow-sm fw-medium">
+            <i class="bi bi-clipboard-check me-1"></i> Mark Attendance
+        </a>
+        <a href="{% url 'attendance:attendance_history' %}" class="btn btn-outline-secondary rounded-pill px-3 fw-medium">
+            <i class="bi bi-clock-history me-1"></i> Logs
+        </a>
+    </div>
+</div>
+
+<!-- Courses Attendance Summary Table -->
+<div class="card card-custom p-4 bg-white shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-dark mb-0">
+            <i class="bi bi-collection-play me-2 text-primary"></i>Course Attendance Metrics ({{ total_courses }})
+        </h5>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Course Code</th>
+                    <th>Subject Title</th>
+                    <th>Instructor</th>
+                    <th>Enrolled</th>
+                    <th>Total Classes</th>
+                    <th>Present Logs</th>
+                    <th style="min-width: 180px;">Attendance Rate</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in courses_with_stats %}
+                <tr>
+                    <td>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace fw-bold">
+                            {{ item.course.course_code }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'attendance:course_attendance_report' item.course.pk %}" class="fw-bold text-dark text-decoration-none">
+                            {{ item.course.title }}
+                        </a>
+                        <span class="small text-muted d-block">{{ item.course.department.name }} &bull; {{ item.course.classroom|default:'Open Room' }}</span>
+                    </td>
+                    <td>
+                        {% if item.course.teacher %}
+                            <span class="fw-medium text-dark">{{ item.course.teacher.user.get_full_name|default:item.course.teacher.user.username }}</span>
+                        {% else %}
+                            <span class="text-muted small">Not Assigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-people me-1"></i>{{ item.enrolled_count }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="fw-bold text-dark">{{ item.total_sessions }}</span>
+                        <span class="small text-muted">Days</span>
+                    </td>
+                    <td>
+                        <span class="fw-semibold text-success">{{ item.present_logs }}</span>
+                        <span class="small text-muted">/ {{ item.total_logs }}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 8px;">
+                                <div class="progress-bar {% if item.rate >= 75 %}bg-success{% elif item.rate >= 60 %}bg-warning{% else %}bg-danger{% endif %}"
+                                     role="progressbar" style="width: {{ item.rate }}%;" aria-valuenow="{{ item.rate }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <span class="small fw-bold {% if item.rate >= 75 %}text-success{% elif item.rate >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ item.rate }}%
+                            </span>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'attendance:course_attendance_report' item.course.pk %}" class="btn btn-outline-primary px-3 rounded-pill" title="Detailed Report">
+                                <i class="bi bi-bar-chart-fill me-1"></i> Report
+                            </a>
+                            <a href="{% url 'attendance:mark_course_attendance' item.course.pk %}" class="btn btn-primary px-3 rounded-pill" title="Mark Attendance">
+                                <i class="bi bi-check2-square me-1"></i> Mark
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-5">
+                        <i class="bi bi-journal-x fs-1 d-block mb-2 text-secondary"></i>
+                        <p class="mb-0 fw-semibold">No courses found for attendance analysis.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

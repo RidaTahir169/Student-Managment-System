@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.course_code }}: {{ course.title }} - SMS{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 font-monospace fs-6">
+                {{ course.course_code }}
+            </span>
+            <h2 class="fw-bold text-dark mb-0">{{ course.title }}</h2>
+        </div>
+        <p class="text-muted mb-0 small">{{ course.department.name }} &bull; {{ course.credit_hours }} Credit Hours &bull; Session: {{ course.session|default:'All Sessions' }}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'courses:course_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Back to Catalog
+        </a>
+        {% if user.is_superuser or user.role == 'ADMIN' %}
+        <a href="{% url 'courses:course_enroll_students' course.pk %}" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">
+            <i class="bi bi-person-plus me-1"></i> Enroll Students
+        </a>
+        <a href="{% url 'courses:course_update' course.pk %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+            <i class="bi bi-pencil-square me-1"></i> Edit Course
+        </a>
+        <a href="{% url 'courses:course_delete' course.pk %}" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+            <i class="bi bi-trash me-1"></i> Delete
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Course Specs & Instructor Info -->
+    <div class="col-lg-4">
+        <!-- Course Specification Card -->
+        <div class="card card-custom p-4 bg-white mb-4">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Course Specifications</h6>
+            
+            <div class="mb-2 d-flex justify-content-between">
+                <span class="text-muted small">Course Code:</span>
+                <span class="fw-bold font-monospace text-primary">{{ course.course_code }}</span>
+            </div>
+            <div class="mb-2 d-flex justify-content-between">
+                <span class="text-muted small">Academic Department:</span>
+                <span class="badge bg-light text-dark border">{{ course.department.name }} ({{ course.department.code }})</span>
+            </div>
+            <div class="mb-2 d-flex justify-content-between">
+                <span class="text-muted small">Credit Hours:</span>
+                <span class="fw-semibold text-dark">{{ course.credit_hours }} Credits</span>
+            </div>
+            <div class="mb-2 d-flex justify-content-between">
+                <span class="text-muted small">Target Class Room:</span>
+                <span class="badge bg-light text-secondary border">{{ course.classroom|default:'Open / Cross-Class' }}</span>
+            </div>
+            <div class="mb-2 d-flex justify-content-between">
+                <span class="text-muted small">Academic Session:</span>
+                <span class="badge bg-info bg-opacity-10 text-dark">{{ course.session|default:'None' }}</span>
+            </div>
+
+            {% if course.description %}
+            <div class="border-top pt-3 mt-3">
+                <span class="text-muted small d-block mb-1 fw-semibold">Syllabus Overview:</span>
+                <p class="small text-muted mb-0 lh-base">{{ course.description|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Instructor Information Card -->
+        <div class="card card-custom p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-person-video3 text-success me-2"></i>Assigned Instructor</h6>
+                {% if user.is_superuser or user.role == 'ADMIN' %}
+                <a href="{% url 'courses:course_update' course.pk %}" class="btn btn-sm btn-link text-decoration-none p-0">Change</a>
+                {% endif %}
+            </div>
+
+            {% if course.teacher %}
+                <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                    {% if course.teacher.user.profile_picture %}
+                        <img src="{{ course.teacher.user.profile_picture.url }}" alt="" class="rounded-circle me-3 border" style="width: 48px; height: 48px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                            <i class="bi bi-person-fill fs-4"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <a href="{% url 'teachers:teacher_detail' course.teacher.pk %}" class="fw-bold text-dark text-decoration-none d-block">
+                            {{ course.teacher.user.get_full_name|default:course.teacher.user.username }}
+                        </a>
+                        <span class="badge bg-light text-primary border border-primary border-opacity-25 font-monospace" style="font-size: 0.75rem;">
+                            {{ course.teacher.employee_id }}
+                        </span>
+                    </div>
+                </div>
+                <div class="small">
+                    <div class="mb-1 text-muted"><strong>Designation:</strong> {{ course.teacher.designation }}</div>
+                    <div class="mb-1 text-muted"><strong>Department:</strong> {{ course.teacher.department|default:'N/A' }}</div>
+                    <div class="mb-1 text-muted"><strong>Email:</strong> {{ course.teacher.user.email }}</div>
+                    <div class="mb-0 text-muted"><strong>Qualification:</strong> {{ course.teacher.qualification|default:'-' }}</div>
+                </div>
+            {% else %}
+                <div class="text-center py-3 text-muted">
+                    <i class="bi bi-person-dash fs-3 d-block mb-1 text-warning"></i>
+                    <p class="small mb-2">No instructor has been assigned to this course yet.</p>
+                    {% if user.is_superuser or user.role == 'ADMIN' %}
+                    <a href="{% url 'courses:course_update' course.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        <i class="bi bi-person-plus me-1"></i> Assign Instructor
+                    </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Roster & Metrics -->
+    <div class="col-lg-8">
+        <!-- Enrollment Metrics -->
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+                <div class="card card-custom p-3 bg-white border-start border-4 border-primary h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">Total Enrolled</span>
+                            <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_enrolled }}</h3>
+                            <div class="text-muted small mt-1">
+                                <i class="bi bi-people-fill text-primary me-1"></i>Registered Scholars
+                            </div>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                            <i class="bi bi-person-check-fill fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="card card-custom p-3 bg-white border-start border-4 border-success h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">Active Status</span>
+                            <h3 class="fw-bold text-success mt-1 mb-0">{{ active_enrolled }}</h3>
+                            <div class="text-muted small mt-1">
+                                <i class="bi bi-check-circle text-success me-1"></i>Active Students
+                            </div>
+                        </div>
+                        <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
+                            <i class="bi bi-award-fill fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrolled Students Roster -->
+        <div class="card card-custom p-4 bg-white">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-people-fill text-primary me-2"></i>Enrolled Students Roster
+                    </h5>
+                    <span class="text-muted small">Scholars actively registered in this course module</span>
+                </div>
+                {% if user.is_superuser or user.role == 'ADMIN' %}
+                <div class="d-flex gap-2">
+                    {% if course.classroom %}
+                    <form method="post" action="{% url 'courses:course_enroll_students' course.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="enroll_classroom">
+                        <button type="submit" class="btn btn-outline-success btn-sm rounded-pill px-3" title="Enroll all students from {{ course.classroom }}">
+                            <i class="bi bi-box-arrow-in-down me-1"></i> Sync Class
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'courses:course_enroll_students' course.pk %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        <i class="bi bi-person-plus me-1"></i> Manage Roster
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Admission #</th>
+                            <th>Student Name</th>
+                            <th>Class Room</th>
+                            <th>Roll #</th>
+                            <th>Enrolled Date</th>
+                            <th>Status</th>
+                            {% if user.is_superuser or user.role == 'ADMIN' %}
+                            <th class="text-end">Action</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in enrollments %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-light text-primary border border-primary border-opacity-25 font-monospace fw-bold">
+                                    {{ enrollment.student.admission_number }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'students:student_detail' enrollment.student.pk %}" class="fw-semibold text-dark text-decoration-none">
+                                    {{ enrollment.student.user.get_full_name|default:enrollment.student.user.username }}
+                                </a>
+                                <span class="text-muted small d-block">{{ enrollment.student.user.email }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-secondary border">{{ enrollment.student.classroom|default:'Unassigned' }}</span>
+                            </td>
+                            <td><span class="text-secondary fw-semibold">{{ enrollment.student.roll_number|default:'-' }}</span></td>
+                            <td class="text-muted small">{{ enrollment.enrollment_date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge {% if enrollment.status == 'ACTIVE' %}bg-success bg-opacity-10 text-success{% elif enrollment.status == 'COMPLETED' %}bg-info bg-opacity-10 text-info{% else %}bg-secondary bg-opacity-10 text-secondary{% endif %}">
+                                    {{ enrollment.get_status_display }}
+                                </span>
+                            </td>
+                            {% if user.is_superuser or user.role == 'ADMIN' %}
+                            <td class="text-end">
+                                <form method="post" action="{% url 'courses:course_unenroll_student' course.pk enrollment.student.pk %}" class="d-inline" onsubmit="return confirm('Remove student {{ enrollment.student.admission_number }} from this course?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" title="Drop Enrollment">
+                                        <i class="bi bi-x-circle me-1"></i> Drop
+                                    </button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if user.is_superuser or user.role == 'ADMIN' %}7{% else %}6{% endif %}" class="text-center text-muted py-4">
+                                <i class="bi bi-person-x fs-3 d-block mb-2 text-secondary"></i>
+                                <p class="mb-2">No students are currently enrolled in this course.</p>
+                                {% if user.is_superuser or user.role == 'ADMIN' %}
+                                <a href="{% url 'courses:course_enroll_students' course.pk %}" class="btn btn-sm btn-primary rounded-pill px-3">
+                                    <i class="bi bi-person-plus me-1"></i> Enroll Students Now
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

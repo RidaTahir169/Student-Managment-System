@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Details: {{ student.admission_number }} - SMS{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="bi bi-person-badge-fill text-primary me-2"></i>Student Record Card
+        </h2>
+        <p class="text-muted mb-0 small">Comprehensive academic profile, attendance, and exam transcript</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'students:student_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Back to Directory
+        </a>
+        {% if user.is_superuser or user.role == 'ADMIN' %}
+        <a href="{% url 'students:student_update' student.pk %}" class="btn btn-primary btn-sm rounded-pill px-3">
+            <i class="bi bi-pencil-square me-1"></i> Edit Profile
+        </a>
+        <a href="{% url 'students:student_delete' student.pk %}" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+            <i class="bi bi-trash me-1"></i> Delete
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Student Demographic Card -->
+    <div class="col-lg-4">
+        <div class="card card-custom p-4 bg-white text-center mb-4">
+            <div class="mb-3 position-relative d-inline-block">
+                {% if student.user.profile_picture %}
+                    <img src="{{ student.user.profile_picture.url }}" alt="Profile" class="rounded-circle shadow-sm border border-3 border-primary" style="width: 110px; height: 110px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 110px; height: 110px;">
+                        <i class="bi bi-person-fill" style="font-size: 3.5rem;"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <h4 class="fw-bold text-dark mb-1">{{ student.user.get_full_name|default:student.user.username }}</h4>
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 font-monospace fs-6 mb-3">
+                {{ student.admission_number }}
+            </span>
+
+            <div class="text-start border-top pt-3 mt-2">
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Username:</span>
+                    <span class="fw-semibold small text-dark">{{ student.user.username }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Email:</span>
+                    <span class="fw-semibold small text-dark">{{ student.user.email }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Assigned Class:</span>
+                    <span class="badge bg-light text-dark border">{{ student.classroom|default:'Unassigned' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Roll Number:</span>
+                    <span class="fw-semibold small text-dark">{{ student.roll_number|default:'-' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Gender:</span>
+                    <span class="fw-semibold small text-dark">{{ student.user.get_gender_display|default:'-' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Date of Birth:</span>
+                    <span class="fw-semibold small text-dark">{{ student.user.date_of_birth|default:'-' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Blood Group:</span>
+                    <span class="badge bg-danger bg-opacity-10 text-danger">{{ student.blood_group|default:'-' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Phone:</span>
+                    <span class="fw-semibold small text-dark">{{ student.user.phone_number|default:'-' }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted small">Admitted On:</span>
+                    <span class="fw-semibold small text-dark">{{ student.admission_date|date:"M d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parent / Emergency Contact Card -->
+        <div class="card card-custom p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-shield-shaded text-danger me-2"></i>Guardian & Emergency Contact</h6>
+            <div class="mb-2">
+                <span class="text-muted small d-block">Parent / Guardian:</span>
+                <span class="fw-semibold text-dark">{{ student.parent_name|default:'Not Provided' }}</span>
+            </div>
+            <div class="mb-2">
+                <span class="text-muted small d-block">Parent Contact:</span>
+                <span class="fw-semibold text-dark">{{ student.parent_phone|default:'Not Provided' }}</span>
+            </div>
+            <div class="mb-2">
+                <span class="text-muted small d-block">Emergency Phone:</span>
+                <span class="fw-semibold text-danger">{{ student.emergency_contact|default:'Not Provided' }}</span>
+            </div>
+            <div>
+                <span class="text-muted small d-block">Home Address:</span>
+                <span class="small text-dark">{{ student.user.address|default:'Not Provided' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Academic Details, Enrollments, Attendance & Grades -->
+    <div class="col-lg-8">
+        <!-- Attendance Health Summary -->
+        <div class="card card-custom p-3 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-calendar-check text-success me-2"></i>Attendance Summary</h6>
+                <span class="badge bg-success px-3 py-1">{{ attendance_rate }}% Presence Rate</span>
+            </div>
+            <div class="progress mb-3" style="height: 8px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: {{ attendance_rate }}%;" aria-valuenow="{{ attendance_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="row text-center g-2 small">
+                <div class="col-6 col-md-3">
+                    <div class="bg-light p-2 rounded border">
+                        <span class="text-muted d-block">Total Logs</span>
+                        <strong class="text-dark">{{ total_attendance }}</strong>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="bg-light p-2 rounded border">
+                        <span class="text-success d-block">Present Days</span>
+                        <strong class="text-success">{{ present_attendance }}</strong>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="bg-light p-2 rounded border">
+                        <span class="text-danger d-block">Absent Days</span>
+                        <strong class="text-danger">{{ total_attendance|add:"-"|add:present_attendance }}</strong>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="bg-light p-2 rounded border">
+                        <span class="text-info d-block">Class Placement</span>
+                        <strong class="text-info">{{ student.classroom|default:'None' }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrolled Courses -->
+        <div class="card card-custom p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-journal-bookmark-fill text-primary me-2"></i>Active Course Enrollments</h6>
+                {% if user.is_superuser or user.role == 'ADMIN' %}
+                <a href="{% url 'students:student_enroll_courses' student.pk %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="bi bi-journal-plus me-1"></i> Manage Courses
+                </a>
+                {% endif %}
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Title</th>
+                            <th>Instructor</th>
+                            <th>Credits</th>
+                            <th>Status</th>
+                            {% if user.is_superuser or user.role == 'ADMIN' %}
+                            <th class="text-end">Action</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in enrollments %}
+                        <tr>
+                            <td><span class="badge bg-light text-primary border border-primary border-opacity-25 font-monospace fw-bold">{{ enrollment.course.course_code }}</span></td>
+                            <td class="fw-semibold">
+                                <a href="{% url 'courses:course_detail' enrollment.course.pk %}" class="text-dark text-decoration-none">
+                                    {{ enrollment.course.title }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if enrollment.course.teacher %}
+                                    {{ enrollment.course.teacher.user.get_full_name|default:enrollment.course.teacher.user.username }}
+                                {% else %}
+                                    <span class="badge bg-light text-muted border">TBA</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ enrollment.course.credit_hours }} Credits</td>
+                            <td>
+                                <span class="badge {% if enrollment.status == 'ACTIVE' %}bg-success bg-opacity-10 text-success{% elif enrollment.status == 'COMPLETED' %}bg-info bg-opacity-10 text-info{% else %}bg-secondary bg-opacity-10 text-secondary{% endif %}">
+                                    {{ enrollment.get_status_display }}
+                                </span>
+                            </td>
+                            {% if user.is_superuser or user.role == 'ADMIN' %}
+                            <td class="text-end">
+                                <form method="post" action="{% url 'courses:course_unenroll_student' enrollment.course.pk student.pk %}" class="d-inline" onsubmit="return confirm('Remove student {{ student.admission_number }} from {{ enrollment.course.course_code }}?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" title="Drop Enrollment">
+                                        <i class="bi bi-x-circle me-1"></i> Drop
+                                    </button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if user.is_superuser or user.role == 'ADMIN' %}6{% else %}5{% endif %}" class="text-center text-muted py-4">
+                                <i class="bi bi-journal-x fs-3 d-block mb-1 text-secondary"></i>
+                                No courses enrolled currently.
+                                {% if user.is_superuser or user.role == 'ADMIN' %}
+                                <div class="mt-2">
+                                    <a href="{% url 'students:student_enroll_courses' student.pk %}" class="btn btn-sm btn-primary rounded-pill px-3">
+                                        <i class="bi bi-journal-plus me-1"></i> Enroll in Courses
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Academic Performance & Transcripts -->
+        <div class="card card-custom p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-award-fill text-warning me-2"></i>Academic Record & Exam Scores</h6>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Course</th>
+                            <th>Assessment</th>
+                            <th>Score</th>
+                            <th>Percentage</th>
+                            <th>Grade</th>
+                            <th>Grade Point</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in academic_records %}
+                        <tr>
+                            <td class="fw-semibold">{{ record.course.course_code }}</td>
+                            <td>{{ record.exam_name }}</td>
+                            <td>{{ record.marks_obtained }} / {{ record.total_marks }}</td>
+                            <td>{{ record.percentage }}%</td>
+                            <td>
+                                <span class="badge {% if record.grade == 'A+' or record.grade == 'A' %}bg-success{% elif record.grade == 'B' %}bg-primary{% elif record.grade == 'C' %}bg-secondary{% elif record.grade == 'D' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ record.grade }}
+                                </span>
+                            </td>
+                            <td class="fw-bold">{{ record.grade_point }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">No exam results recorded for this student yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

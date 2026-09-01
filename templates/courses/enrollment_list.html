@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Course Enrollments - SMS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="bi bi-card-checklist text-primary me-2"></i>Course Enrollments Hub
+        </h2>
+        <p class="text-muted mb-0 small">Comprehensive directory of student course registrations and academic status.</p>
+    </div>
+    {% if user.is_superuser or user.role == 'ADMIN' %}
+    <div class="d-flex gap-2">
+        <a href="{% url 'courses:course_list' %}" class="btn btn-outline-secondary rounded-pill px-3 fw-medium">
+            <i class="bi bi-journal-bookmark-fill me-1"></i> Courses
+        </a>
+        <a href="{% url 'courses:enrollment_create' %}" class="btn btn-primary rounded-pill px-3 shadow-sm fw-medium">
+            <i class="bi bi-plus-circle me-1"></i> New Enrollment
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Search & Filter Card -->
+<div class="card card-custom p-3 bg-white mb-4">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-3 col-lg-3">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="q" value="{{ query }}" class="form-control border-start-0 bg-light" placeholder="Search student, adm #, course...">
+            </div>
+        </div>
+        <div class="col-md-3 col-lg-3">
+            <select name="course" class="form-select bg-light">
+                <option value="">-- All Courses --</option>
+                {% for c in courses %}
+                    <option value="{{ c.id }}" {% if course_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.course_code }} - {{ c.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 col-lg-2">
+            <select name="status" class="form-select bg-light">
+                <option value="">-- All Statuses --</option>
+                {% for val, label in status_choices %}
+                    <option value="{{ val }}" {% if status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 col-lg-2">
+            <select name="classroom" class="form-select bg-light">
+                <option value="">-- All Classes --</option>
+                {% for cr in classrooms %}
+                    <option value="{{ cr.id }}" {% if classroom_id == cr.id|stringformat:"s" %}selected{% endif %}>{{ cr.name }} - {{ cr.section }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 col-lg-2 d-flex gap-2">
+            <button type="submit" class="btn btn-secondary w-100 fw-medium">
+                <i class="bi bi-filter me-1"></i> Filter
+            </button>
+            {% if query or course_id or status or classroom_id or department_id %}
+                <a href="{% url 'courses:enrollment_list' %}" class="btn btn-outline-danger" title="Clear Filters">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Enrollments Table Card -->
+<div class="card card-custom bg-white overflow-hidden mb-4">
+    <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+        <span class="fw-semibold text-dark small text-uppercase">Registration Records</span>
+        <span class="badge bg-primary rounded-pill">{{ total_count }} Total Enrollment{{ total_count|pluralize }}</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Admission #</th>
+                    <th>Student Info</th>
+                    <th>Course</th>
+                    <th>Instructor</th>
+                    <th>Class Room</th>
+                    <th>Date Enrolled</th>
+                    <th>Status</th>
+                    {% if user.is_superuser or user.role == 'ADMIN' %}
+                    <th class="text-end pe-4">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for enrollment in page_obj %}
+                <tr>
+                    <td class="ps-4">
+                        <span class="badge bg-light text-primary border border-primary border-opacity-25 font-monospace fw-bold">
+                            {{ enrollment.student.admission_number }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if enrollment.student.user.profile_picture %}
+                                <img src="{{ enrollment.student.user.profile_picture.url }}" alt="" class="rounded-circle me-2 border" style="width: 32px; height: 32px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <a href="{% url 'students:student_detail' enrollment.student.pk %}" class="fw-semibold text-dark text-decoration-none d-block">
+                                    {{ enrollment.student.user.get_full_name|default:enrollment.student.user.username }}
+                                </a>
+                                <span class="text-muted small">{{ enrollment.student.user.email }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{% url 'courses:course_detail' enrollment.course.pk %}" class="fw-semibold text-dark text-decoration-none">
+                            <span class="badge bg-light text-primary border me-1">{{ enrollment.course.course_code }}</span>
+                            {{ enrollment.course.title }}
+                        </a>
+                        <span class="text-muted small d-block">{{ enrollment.course.credit_hours }} Credit Hours</span>
+                    </td>
+                    <td>
+                        {% if enrollment.course.teacher %}
+                            <span class="small text-dark">{{ enrollment.course.teacher.user.get_full_name|default:enrollment.course.teacher.employee_id }}</span>
+                        {% else %}
+                            <span class="badge bg-warning bg-opacity-10 text-dark">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">{{ enrollment.student.classroom|default:'Unassigned' }}</span>
+                    </td>
+                    <td class="text-muted small">{{ enrollment.enrollment_date|date:"M d, Y" }}</td>
+                    <td>
+                        <span class="badge {% if enrollment.status == 'ACTIVE' %}bg-success bg-opacity-10 text-success border border-success border-opacity-25{% elif enrollment.status == 'COMPLETED' %}bg-info bg-opacity-10 text-info border border-info border-opacity-25{% else %}bg-secondary bg-opacity-10 text-secondary{% endif %}">
+                            {{ enrollment.get_status_display }}
+                        </span>
+                    </td>
+                    {% if user.is_superuser or user.role == 'ADMIN' %}
+                    <td class="text-end pe-4">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'courses:enrollment_update' enrollment.pk %}" class="btn btn-outline-secondary" title="Update Status">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="{% url 'courses:enrollment_delete' enrollment.pk %}" class="btn btn-outline-danger" title="Remove Enrollment">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if user.is_superuser or user.role == 'ADMIN' %}8{% else %}7{% endif %}" class="text-center text-muted py-5">
+                        <i class="bi bi-journal-x fs-1 d-block mb-2 text-secondary"></i>
+                        <h5>No enrollment records found.</h5>
+                        <p class="small text-muted mb-0">Try adjusting your filters or create a new student enrollment.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Navigation -->
+    {% if page_obj.has_other_pages %}
+    <div class="p-3 border-top d-flex justify-content-between align-items-center">
+        <span class="small text-muted">
+            Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if course_id %}&course={{ course_id }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if classroom_id %}&classroom={{ classroom_id }}{% endif %}">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if course_id %}&course={{ course_id }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if classroom_id %}&classroom={{ classroom_id }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if course_id %}&course={{ course_id }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if classroom_id %}&classroom={{ classroom_id }}{% endif %}">Next</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

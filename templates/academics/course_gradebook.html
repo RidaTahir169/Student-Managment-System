@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.course_code }} Gradebook - SMS{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 font-monospace fs-6">
+                {{ course.course_code }}
+            </span>
+            <h2 class="fw-bold text-dark mb-0">{{ course.title }} - Gradebook</h2>
+        </div>
+        <p class="text-muted mb-0 small">
+            {{ course.department.name }} &bull; Class: {{ course.classroom|default:'Open Room' }} &bull; Instructor: {{ course.teacher.user.get_full_name|default:course.teacher.user.username|default:'Unassigned' }}
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'academics:record_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> All Records
+        </a>
+        {% if user.is_superuser or user.role == 'ADMIN' or user.role == 'TEACHER' %}
+        <a href="{% url 'academics:record_create' %}?course={{ course.id }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i> Enter Marks
+        </a>
+        {% endif %}
+        <button onclick="window.print()" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+            <i class="bi bi-printer me-1"></i> Print Gradebook
+        </button>
+    </div>
+</div>
+
+<!-- Course Gradebook KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-4">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-primary h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Recorded Assessments</span>
+                    <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_entries }}</h3>
+                    <div class="text-muted small mt-1">Student Submissions</div>
+                </div>
+                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                    <i class="bi bi-journal-text fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-success h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Course Average</span>
+                    <h3 class="fw-bold text-success mt-1 mb-0">{{ avg_percentage }}%</h3>
+                    <div class="text-success small mt-1"><i class="bi bi-graph-up me-1"></i>Mean Score</div>
+                </div>
+                <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
+                    <i class="bi bi-percent fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-info h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Course GPA Index</span>
+                    <h3 class="fw-bold text-info mt-1 mb-0">{{ avg_gpa }} / 4.00</h3>
+                    <div class="text-muted small mt-1">Mean Grade Point</div>
+                </div>
+                <div class="bg-info bg-opacity-10 text-info p-3 rounded-circle">
+                    <i class="bi bi-award-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gradebook Table Card -->
+<div class="card card-custom p-4 bg-white shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-dark mb-0">
+            <i class="bi bi-table text-primary me-2"></i>Assessment Results Ledger
+        </h5>
+        {% if user.is_superuser or user.role == 'ADMIN' or user.role == 'TEACHER' %}
+        <a href="{% url 'academics:record_create' %}?course={{ course.id }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+            <i class="bi bi-plus me-1"></i> Add Score
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Admission #</th>
+                    <th>Student Name</th>
+                    <th>Assessment Title</th>
+                    <th>Type</th>
+                    <th>Score</th>
+                    <th>Percentage</th>
+                    <th>Grade</th>
+                    <th>GPA</th>
+                    <th>Date</th>
+                    {% if user.is_superuser or user.role == 'ADMIN' or user.role == 'TEACHER' %}
+                    <th class="text-end">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>
+                        <span class="badge bg-light text-primary border border-primary border-opacity-25 font-monospace fw-bold">
+                            {{ record.student.admission_number }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'academics:student_report_card' record.student.pk %}" class="fw-semibold text-dark text-decoration-none">
+                            {{ record.student.user.get_full_name|default:record.student.user.username }}
+                        </a>
+                        <span class="small text-muted d-block">{{ record.student.classroom|default:'General' }}</span>
+                    </td>
+                    <td class="fw-semibold text-dark">{{ record.exam_name }}</td>
+                    <td><span class="badge bg-light text-secondary border">{{ record.get_exam_type_display }}</span></td>
+                    <td>
+                        <strong>{{ record.marks_obtained }}</strong>
+                        <span class="text-muted small">/ {{ record.total_marks }}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress" style="width: 50px; height: 6px;">
+                                <div class="progress-bar {% if record.percentage >= 80 %}bg-success{% elif record.percentage >= 60 %}bg-primary{% elif record.percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                     style="width: {{ record.percentage }}%;"></div>
+                            </div>
+                            <span class="small fw-bold">{{ record.percentage }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {% if record.grade == 'A+' or record.grade == 'A' %}bg-success{% elif record.grade == 'B' %}bg-primary{% elif record.grade == 'C' %}bg-secondary{% elif record.grade == 'D' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                            {{ record.grade }}
+                        </span>
+                    </td>
+                    <td><span class="fw-bold text-dark">{{ record.grade_point }}</span></td>
+                    <td class="small text-muted">{{ record.date_recorded|date:"M d, Y" }}</td>
+                    {% if user.is_superuser or user.role == 'ADMIN' or user.role == 'TEACHER' %}
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'academics:record_update' record.pk %}" class="btn btn-outline-primary py-0 px-2" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'academics:record_delete' record.pk %}" class="btn btn-outline-danger py-0 px-2" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-5">
+                        <i class="bi bi-file-earmark-x fs-1 d-block mb-2 text-secondary"></i>
+                        <p class="mb-2 fw-semibold">No assessment marks logged for this course yet.</p>
+                        {% if user.is_superuser or user.role == 'ADMIN' or user.role == 'TEACHER' %}
+                        <a href="{% url 'academics:record_create' %}?course={{ course.id }}" class="btn btn-sm btn-primary rounded-pill px-3">
+                            <i class="bi bi-plus-circle me-1"></i> Enter Marks Now
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

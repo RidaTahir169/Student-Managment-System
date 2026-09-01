@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Faculty Details: {{ teacher.employee_id }} - SMS{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="bi bi-person-badge-fill text-primary me-2"></i>Faculty Profile Card
+        </h2>
+        <p class="text-muted mb-0 small">Comprehensive instructor identity, qualifications, department, and assigned teaching modules.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'teachers:teacher_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Back to Directory
+        </a>
+        {% if user.is_superuser or user.role == 'ADMIN' %}
+        <a href="{% url 'teachers:teacher_assign_courses' teacher.pk %}" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">
+            <i class="bi bi-journal-plus me-1"></i> Assign Courses
+        </a>
+        <a href="{% url 'teachers:teacher_update' teacher.pk %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+            <i class="bi bi-pencil-square me-1"></i> Edit Profile
+        </a>
+        <a href="{% url 'teachers:teacher_delete' teacher.pk %}" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+            <i class="bi bi-trash me-1"></i> Delete
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Faculty Demographic Card -->
+    <div class="col-lg-4">
+        <div class="card card-custom p-4 bg-white text-center mb-4">
+            <div class="mb-3 position-relative d-inline-block">
+                {% if teacher.user.profile_picture %}
+                    <img src="{{ teacher.user.profile_picture.url }}" alt="Profile" class="rounded-circle shadow-sm border border-3 border-primary" style="width: 110px; height: 110px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 110px; height: 110px;">
+                        <i class="bi bi-person-fill" style="font-size: 3.5rem;"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <h4 class="fw-bold text-dark mb-1">{{ teacher.user.get_full_name|default:teacher.user.username }}</h4>
+            <div class="mb-2">
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 font-monospace fs-6">
+                    {{ teacher.employee_id }}
+                </span>
+            </div>
+            <span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-1 mb-3">
+                {{ teacher.designation }}
+            </span>
+
+            <div class="text-start border-top pt-3 mt-2">
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Username:</span>
+                    <span class="fw-semibold small text-dark">{{ teacher.user.username }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Email:</span>
+                    <span class="fw-semibold small text-dark">{{ teacher.user.email }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Department:</span>
+                    <span class="badge bg-light text-dark border">{{ teacher.department|default:'Unassigned' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Qualification:</span>
+                    <span class="fw-semibold small text-dark">{{ teacher.qualification|default:'-' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Gender:</span>
+                    <span class="fw-semibold small text-dark">{{ teacher.user.get_gender_display|default:'-' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Phone:</span>
+                    <span class="fw-semibold small text-dark">{{ teacher.user.phone_number|default:'-' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Date of Birth:</span>
+                    <span class="fw-semibold small text-dark">{{ teacher.user.date_of_birth|default:'-' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted small">Date Joined:</span>
+                    <span class="fw-semibold small text-dark">{{ teacher.joining_date|date:"M d, Y" }}</span>
+                </div>
+                <div>
+                    <span class="text-muted small d-block mb-1">Residential Address:</span>
+                    <span class="small text-dark">{{ teacher.user.address|default:'Not Provided' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Bio / Research Interests -->
+        {% if teacher.bio %}
+        <div class="card card-custom p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-card-text text-primary me-2"></i>Academic Biography & Interests</h6>
+            <p class="small text-muted mb-0 lh-base">{{ teacher.bio|linebreaksbr }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Column: Assigned Courses & Statistics -->
+    <div class="col-lg-8">
+        <!-- Faculty Teaching Statistics -->
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+                <div class="card card-custom p-3 bg-white border-start border-4 border-primary h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">Assigned Courses</span>
+                            <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_courses }}</h3>
+                            <div class="text-muted small mt-1">
+                                <i class="bi bi-journal-bookmark-fill text-primary me-1"></i>Active Modules
+                            </div>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                            <i class="bi bi-book-half fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="card card-custom p-3 bg-white border-start border-4 border-success h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">Total Students Taught</span>
+                            <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_students_enrolled }}</h3>
+                            <div class="text-muted small mt-1">
+                                <i class="bi bi-people-fill text-success me-1"></i>Enrolled in Assigned Courses
+                            </div>
+                        </div>
+                        <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
+                            <i class="bi bi-mortarboard-fill fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assigned Courses Table Card -->
+        <div class="card card-custom p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-journal-check text-primary me-2"></i>Assigned Teaching Modules
+                    </h5>
+                    <span class="text-muted small">Active courses currently led by this instructor</span>
+                </div>
+                {% if user.is_superuser or user.role == 'ADMIN' %}
+                <a href="{% url 'teachers:teacher_assign_courses' teacher.pk %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="bi bi-plus-circle me-1"></i> Manage Courses
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Course Title</th>
+                            <th>Class Room</th>
+                            <th>Department</th>
+                            <th>Session</th>
+                            <th class="text-center">Credits</th>
+                            <th class="text-center">Students</th>
+                            {% if user.is_superuser or user.role == 'ADMIN' %}
+                            <th class="text-end">Action</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in assigned_courses %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-light text-primary border border-primary border-opacity-25 font-monospace fw-bold">
+                                    {{ course.course_code }}
+                                </span>
+                            </td>
+                            <td class="fw-semibold text-dark">
+                                {{ course.title }}
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ course.classroom|default:'Unassigned' }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted small">{{ course.department.code|default:'-' }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info bg-opacity-10 text-dark">{{ course.session|default:'-' }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="fw-semibold text-dark">{{ course.credit_hours }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1">
+                                    <i class="bi bi-people me-1"></i>{{ course.enrolled_students_count }}
+                                </span>
+                            </td>
+                            {% if user.is_superuser or user.role == 'ADMIN' %}
+                            <td class="text-end">
+                                <form method="post" action="{% url 'teachers:teacher_unassign_course' teacher.pk course.pk %}" class="d-inline" onsubmit="return confirm('Are you sure you want to unassign course {{ course.course_code }} from this teacher?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" title="Unassign Course">
+                                        <i class="bi bi-x-circle me-1"></i> Unassign
+                                    </button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if user.is_superuser or user.role == 'ADMIN' %}8{% else %}7{% endif %}" class="text-center text-muted py-4">
+                                <i class="bi bi-journal-x fs-3 d-block mb-2 text-secondary"></i>
+                                <p class="mb-2">No courses are currently assigned to this instructor.</p>
+                                {% if user.is_superuser or user.role == 'ADMIN' %}
+                                <a href="{% url 'teachers:teacher_assign_courses' teacher.pk %}" class="btn btn-sm btn-primary rounded-pill px-3">
+                                    <i class="bi bi-journal-plus me-1"></i> Assign Courses Now
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

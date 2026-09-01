@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.course_code }} Attendance Report - SMS{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 font-monospace fs-6">
+                {{ course.course_code }}
+            </span>
+            <h2 class="fw-bold text-dark mb-0">{{ course.title }} - Attendance Analysis</h2>
+        </div>
+        <p class="text-muted mb-0 small">
+            {{ course.department.name }} &bull; Class: {{ course.classroom|default:'Open Room' }} &bull; Instructor: {{ course.teacher.user.get_full_name|default:course.teacher.user.username|default:'Unassigned' }}
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'attendance:attendance_report' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> All Reports
+        </a>
+        <a href="{% url 'attendance:mark_course_attendance' course.pk %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+            <i class="bi bi-clipboard-check me-1"></i> Mark Today
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+            <i class="bi bi-printer me-1"></i> Print Report
+        </button>
+    </div>
+</div>
+
+<!-- KPI Cards for Course -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-primary h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Total Classes Held</span>
+                    <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_classes }}</h3>
+                    <div class="text-muted small mt-1">Distinct Sessions</div>
+                </div>
+                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                    <i class="bi bi-calendar3 fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-success h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Average Attendance</span>
+                    <h3 class="fw-bold text-success mt-1 mb-0">{{ avg_attendance }}%</h3>
+                    <div class="text-success small mt-1"><i class="bi bi-check-circle me-1"></i>Classroom Average</div>
+                </div>
+                <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
+                    <i class="bi bi-pie-chart-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-info h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Enrolled Scholars</span>
+                    <h3 class="fw-bold text-info mt-1 mb-0">{{ total_students }}</h3>
+                    <div class="text-muted small mt-1">Active Students</div>
+                </div>
+                <div class="bg-info bg-opacity-10 text-info p-3 rounded-circle">
+                    <i class="bi bi-people-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-danger h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Total Missed / Late</span>
+                    <h3 class="fw-bold text-danger mt-1 mb-0">{{ total_absent_all }}</h3>
+                    <div class="text-muted small mt-1">{{ total_late_all }} Late Logs</div>
+                </div>
+                <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-circle">
+                    <i class="bi bi-person-x-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student Attendance Breakdown Table -->
+<div class="card card-custom p-4 bg-white shadow-sm">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3 pb-2 border-bottom">
+        <div>
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="bi bi-person-lines-fill text-primary me-2"></i>Student-by-Student Attendance Summary
+            </h5>
+            <span class="text-muted small">Calculation formula: <strong>(Present Days / Total Classes Held) &times; 100</strong> (Minimum target: 75%)</span>
+        </div>
+        <div>
+            <span class="badge bg-light text-dark border px-3 py-2">
+                <i class="bi bi-info-circle text-primary me-1"></i> Threshold: <strong>75%</strong>
+            </span>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Admission #</th>
+                    <th>Student Name</th>
+                    <th>Class Room</th>
+                    <th class="text-center text-success">Present Days</th>
+                    <th class="text-center text-danger">Absent Days</th>
+                    <th class="text-center text-warning">Late Days</th>
+                    <th class="text-center text-info">Excused</th>
+                    <th style="min-width: 180px;">Attendance %</th>
+                    <th class="text-center">Eligibility</th>
+                    <th class="text-end">Student Profile</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in student_roster %}
+                <tr {% if item.is_shortage %}class="table-danger bg-opacity-10"{% endif %}>
+                    <td>
+                        <span class="badge bg-light text-primary border border-primary border-opacity-25 font-monospace fw-bold">
+                            {{ item.student.admission_number }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'attendance:student_attendance' item.student.pk %}" class="fw-bold text-dark text-decoration-none">
+                            {{ item.student.user.get_full_name|default:item.student.user.username }}
+                        </a>
+                        <span class="small text-muted d-block">{{ item.student.user.email }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-secondary border">{{ item.student.classroom|default:'-' }}</span>
+                    </td>
+                    <td class="text-center fw-bold text-success">{{ item.present_count }}</td>
+                    <td class="text-center fw-bold text-danger">{{ item.absent_count }}</td>
+                    <td class="text-center fw-bold text-warning">{{ item.late_count }}</td>
+                    <td class="text-center fw-bold text-info">{{ item.excused_count }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 8px;">
+                                <div class="progress-bar {% if item.percentage >= 75 %}bg-success{% elif item.percentage >= 60 %}bg-warning{% else %}bg-danger{% endif %}"
+                                     role="progressbar" style="width: {{ item.percentage }}%;" aria-valuenow="{{ item.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <span class="small fw-bold {% if item.percentage >= 75 %}text-success{% elif item.percentage >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ item.percentage }}%
+                            </span>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        {% if total_classes == 0 %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">No Classes</span>
+                        {% elif item.is_shortage %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>Shortage
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                                <i class="bi bi-check-circle-fill me-1"></i>Eligible
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'attendance:student_attendance' item.student.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3" title="Student Attendance Ledger">
+                            <i class="bi bi-journal-text me-1"></i> Ledger
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-5">
+                        <i class="bi bi-people fs-1 d-block mb-2 text-secondary"></i>
+                        <p class="mb-0 fw-semibold">No students currently enrolled in this course.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action_title }} - SMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-card-checklist text-primary me-2"></i>{{ action_title }}
+                </h2>
+                <p class="text-muted mb-0 small">Register student into course curriculum and configure enrollment status.</p>
+            </div>
+            <a href="{% url 'courses:enrollment_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Back to Enrollments
+            </a>
+        </div>
+
+        <div class="card card-custom p-4 bg-white">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <h5 class="fw-bold text-primary mb-3 pb-2 border-bottom"><i class="bi bi-info-circle me-2"></i>Enrollment Details</h5>
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger small mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    {{ form.non_field_errors.0 }}
+                </div>
+                {% endif %}
+
+                {% if is_edit %}
+                    <!-- Edit Mode: Status and Date only -->
+                    <div class="bg-light rounded-3 p-3 mb-3 border">
+                        <div class="row g-2 small">
+                            <div class="col-sm-6">
+                                <span class="text-muted d-block">Student:</span>
+                                <strong class="text-dark">{{ enrollment.student.user.get_full_name|default:enrollment.student.user.username }} ({{ enrollment.student.admission_number }})</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span class="text-muted d-block">Course:</span>
+                                <strong class="text-primary">{{ enrollment.course.course_code }} &mdash; {{ enrollment.course.title }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Enrollment Status <span class="text-danger">*</span></label>
+                            {{ form.status }}
+                            {% if form.status.errors %}<div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Enrollment Date</label>
+                            {{ form.enrollment_date }}
+                            {% if form.enrollment_date.errors %}<div class="text-danger small mt-1">{{ form.enrollment_date.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Create Mode: Student, Course, Date, Status -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Student <span class="text-danger">*</span></label>
+                            {{ form.student }}
+                            {% if form.student.errors %}<div class="text-danger small mt-1">{{ form.student.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Course Module <span class="text-danger">*</span></label>
+                            {{ form.course }}
+                            {% if form.course.errors %}<div class="text-danger small mt-1">{{ form.course.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Enrollment Date <span class="text-danger">*</span></label>
+                            {{ form.enrollment_date }}
+                            {% if form.enrollment_date.errors %}<div class="text-danger small mt-1">{{ form.enrollment_date.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Initial Status <span class="text-danger">*</span></label>
+                            {{ form.status }}
+                            {% if form.status.errors %}<div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between pt-3 border-top">
+                    <a href="{% url 'courses:enrollment_list' %}" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm">
+                        <i class="bi bi-check2-circle me-1"></i> Save Enrollment Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

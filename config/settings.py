@@ -1,4 +1,4 @@
-﻿"""
+"""
 Django settings for Student Management System project.
 """
 
@@ -77,6 +77,15 @@ DATABASES = {
     }
 }
 
+# Custom User Model
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
+# Authentication Backends (supports login via case-insensitive username or email)
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -114,6 +123,18 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Authentication and Login URLs
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'accounts:role_redirect'
+LOGOUT_REDIRECT_URL = 'accounts:login'
+
+# Security & Session Protections
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+X_FRAME_OPTIONS = 'DENY'
+
 # Bootstrap 5 Alert Tags Mapping for Django Messages
 MESSAGE_TAGS = {
     messages.DEBUG: 'secondary',
@@ -122,3 +143,4 @@ MESSAGE_TAGS = {
     messages.WARNING: 'warning',
     messages.ERROR: 'danger',
 }
+

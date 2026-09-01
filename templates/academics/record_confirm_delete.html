@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Delete Assessment Record - SMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="card card-custom p-4 bg-white border-top border-4 border-danger shadow-sm text-center">
+            <div class="text-danger mb-3">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+            </div>
+
+            <h4 class="fw-bold text-dark mb-2">Delete Academic Record?</h4>
+            <p class="text-muted small mb-4">
+                Are you sure you want to permanently remove this examination record? This will recalculate student GPA and course analytics.
+            </p>
+
+            <div class="card p-3 bg-light border text-start mb-4 small">
+                <div class="mb-2"><strong>Student:</strong> {{ record.student.user.get_full_name|default:record.student.user.username }} ({{ record.student.admission_number }})</div>
+                <div class="mb-2"><strong>Course:</strong> {{ record.course.course_code }} - {{ record.course.title }}</div>
+                <div class="mb-2"><strong>Assessment:</strong> {{ record.exam_name }} ({{ record.get_exam_type_display }})</div>
+                <div class="mb-2"><strong>Score:</strong> {{ record.marks_obtained }} / {{ record.total_marks }} ({{ record.percentage }}%)</div>
+                <div><strong>Grade:</strong> <span class="badge bg-primary">{{ record.grade }}</span> (GPA: {{ record.grade_point }})</div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between gap-2">
+                    <a href="{% url 'academics:record_list' %}" class="btn btn-outline-secondary w-50">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger w-50 fw-medium">
+                        <i class="bi bi-trash me-1"></i> Yes, Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

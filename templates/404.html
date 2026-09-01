@@ -1,0 +1,25 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}404 Page Not Found - SMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-5 w-100">
+    <div class="col-md-6 col-lg-5 text-center">
+        <div class="card card-custom p-5 bg-white">
+            <div class="text-warning mb-3">
+                <i class="bi bi-compass" style="font-size: 5rem;"></i>
+            </div>
+            <h1 class="fw-bold text-dark">404</h1>
+            <h4 class="fw-bold mb-3">Page Not Found</h4>
+            <p class="text-muted mb-4">
+                The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+            </p>
+            <div>
+                <a href="{% url 'dashboard:index' %}" class="btn btn-primary px-4 py-2 rounded-pill fw-semibold shadow-sm">
+                    <i class="bi bi-house-door me-1"></i> Return to Safety
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

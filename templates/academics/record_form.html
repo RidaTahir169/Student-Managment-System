@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h3 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-pencil-square text-primary me-2"></i>{{ title }}
+                </h3>
+                <p class="text-muted mb-0 small">Enter or modify student assessment scores and examination results.</p>
+            </div>
+            <a href="{% url 'academics:record_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Back to Ledger
+            </a>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left: Main Form Card -->
+            <div class="col-lg-8">
+                <div class="card card-custom p-4 bg-white shadow-sm">
+                    <form method="post" id="academicRecordForm">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger p-2 small mb-3">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-dark">
+                                <i class="bi bi-journal-bookmark text-primary me-1"></i>Academic Course <span class="text-danger">*</span>
+                            </label>
+                            {{ form.course }}
+                            {% if form.course.errors %}
+                                <div class="text-danger small mt-1">{{ form.course.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-dark">
+                                <i class="bi bi-person text-primary me-1"></i>Student Scholar <span class="text-danger">*</span>
+                            </label>
+                            {{ form.student }}
+                            {% if form.student.errors %}
+                                <div class="text-danger small mt-1">{{ form.student.errors }}</div>
+                            {% endif %}
+                            <div class="form-text small">Select the student enrolled in this course.</div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-7">
+                                <label class="form-label fw-semibold text-dark">Assessment Title <span class="text-danger">*</span></label>
+                                {{ form.exam_name }}
+                                {% if form.exam_name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.exam_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold text-dark">Assessment Type <span class="text-danger">*</span></label>
+                                {{ form.exam_type }}
+                                {% if form.exam_type.errors %}
+                                    <div class="text-danger small mt-1">{{ form.exam_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-dark">Marks Obtained <span class="text-danger">*</span></label>
+                                {{ form.marks_obtained }}
+                                {% if form.marks_obtained.errors %}
+                                    <div class="text-danger small mt-1">{{ form.marks_obtained.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-dark">Total Marks <span class="text-danger">*</span></label>
+                                {{ form.total_marks }}
+                                {% if form.total_marks.errors %}
+                                    <div class="text-danger small mt-1">{{ form.total_marks.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Live Calculated Result Preview -->
+                        <div class="card p-3 bg-light border mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small fw-semibold text-muted">Computed Grade Preview:</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary fs-6" id="previewPercentage">--%</span>
+                                    <span class="badge bg-success fs-6" id="previewGrade">Grade: --</span>
+                                    <span class="badge bg-dark fs-6" id="previewGpa">GPA: --</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-dark">Date Recorded <span class="text-danger">*</span></label>
+                            {{ form.date_recorded }}
+                            {% if form.date_recorded.errors %}
+                                <div class="text-danger small mt-1">{{ form.date_recorded.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-dark">Remarks / Feedback (Optional)</label>
+                            {{ form.remarks }}
+                            {% if form.remarks.errors %}
+                                <div class="text-danger small mt-1">{{ form.remarks.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{% url 'academics:record_list' %}" class="btn btn-outline-secondary px-4">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4 fw-medium shadow-sm">
+                                <i class="bi bi-check2-circle me-1"></i> {{ button_text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Grading Scale Reference Card -->
+            <div class="col-lg-4">
+                <div class="card card-custom p-4 bg-white shadow-sm mb-3">
+                    <h6 class="fw-bold text-dark mb-3">
+                        <i class="bi bi-info-circle text-primary me-2"></i>Official Grading Scale
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered text-center align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Percentage</th>
+                                    <th>Grade</th>
+                                    <th>GPA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="table-success bg-opacity-25">
+                                    <td>90% - 100%</td>
+                                    <td><strong>A+</strong></td>
+                                    <td>4.00</td>
+                                </tr>
+                                <tr>
+                                    <td>80% - 89%</td>
+                                    <td><strong>A</strong></td>
+                                    <td>3.75</td>
+                                </tr>
+                                <tr>
+                                    <td>70% - 79%</td>
+                                    <td><strong>B</strong></td>
+                                    <td>3.00</td>
+                                </tr>
+                                <tr>
+                                    <td>60% - 69%</td>
+                                    <td><strong>C</strong></td>
+                                    <td>2.00</td>
+                                </tr>
+                                <tr>
+                                    <td>50% - 59%</td>
+                                    <td><strong>D</strong></td>
+                                    <td>1.00</td>
+                                </tr>
+                                <tr class="table-danger bg-opacity-25">
+                                    <td>Below 50%</td>
+                                    <td><strong>F</strong></td>
+                                    <td>0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card card-custom p-3 bg-light border text-muted small">
+                    <div class="fw-bold text-dark mb-1"><i class="bi bi-calculator me-1 text-primary"></i>Automatic Calculation</div>
+                    Percentages, letter grades, and grade points are calculated and saved automatically upon form submission.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Live Calculation Preview -->
+<script>
+    function calculatePreview() {
+        const marksInput = document.getElementById('id_marks_obtained');
+        const totalInput = document.getElementById('id_total_marks');
+        const previewPct = document.getElementById('previewPercentage');
+        const previewGrade = document.getElementById('previewGrade');
+        const previewGpa = document.getElementById('previewGpa');
+
+        if (!marksInput || !totalInput) return;
+
+        const marks = parseFloat(marksInput.value);
+        const total = parseFloat(totalInput.value);
+
+        if (!isNaN(marks) && !isNaN(total) && total > 0) {
+            const pct = (marks / total) * 100;
+            previewPct.textContent = pct.toFixed(2) + '%';
+
+            let grade = 'F';
+            let gpa = '0.00';
+
+            if (pct >= 90) {
+                grade = 'A+';
+                gpa = '4.00';
+            } else if (pct >= 80) {
+                grade = 'A';
+                gpa = '3.75';
+            } else if (pct >= 70) {
+                grade = 'B';
+                gpa = '3.00';
+            } else if (pct >= 60) {
+                grade = 'C';
+                gpa = '2.00';
+            } else if (pct >= 50) {
+                grade = 'D';
+                gpa = '1.00';
+            } else {
+                grade = 'F';
+                gpa = '0.00';
+            }
+
+            previewGrade.textContent = 'Grade: ' + grade;
+            previewGpa.textContent = 'GPA: ' + gpa;
+        } else {
+            previewPct.textContent = '--%';
+            previewGrade.textContent = 'Grade: --';
+            previewGpa.textContent = 'GPA: --';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const marksInput = document.getElementById('id_marks_obtained');
+        const totalInput = document.getElementById('id_total_marks');
+        if (marksInput) marksInput.addEventListener('input', calculatePreview);
+        if (totalInput) totalInput.addEventListener('input', calculatePreview);
+        calculatePreview();
+    });
+</script>
+{% endblock %}

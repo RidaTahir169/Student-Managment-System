@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Attendance Record - SMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h3 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-pencil-square text-primary me-2"></i>Edit Attendance Record
+                </h3>
+                <p class="text-muted mb-0 small">Update status, date, or remarks for a logged attendance entry.</p>
+            </div>
+            <a href="{% url 'attendance:attendance_history' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Back to History
+            </a>
+        </div>
+
+        <!-- Student & Course Context Card -->
+        <div class="card card-custom p-3 bg-light mb-4 border">
+            <div class="row g-2 small">
+                <div class="col-sm-6">
+                    <span class="text-muted d-block">Student:</span>
+                    <strong class="text-dark">{{ record.student.user.get_full_name|default:record.student.user.username }}</strong>
+                    <span class="badge bg-light text-primary border ms-1">{{ record.student.admission_number }}</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-muted d-block">Course:</span>
+                    <strong class="text-dark">{{ record.course.course_code }}</strong> - {{ record.course.title }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Form Card -->
+        <div class="card card-custom p-4 bg-white shadow-sm">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark">Attendance Date <span class="text-danger">*</span></label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                        <div class="text-danger small mt-1">{{ form.date.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark">Attendance Status <span class="text-danger">*</span></label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div class="text-danger small mt-1">{{ form.status.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-dark">Remarks / Justification</label>
+                    {{ form.remarks }}
+                    <div class="form-text">Optional notes (e.g. Medical certificate, family leave).</div>
+                    {% if form.remarks.errors %}
+                        <div class="text-danger small mt-1">{{ form.remarks.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <a href="{% url 'attendance:attendance_history' %}" class="btn btn-outline-secondary px-4">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 fw-medium">
+                        <i class="bi bi-check2-circle me-1"></i> Update Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action_title }} - SMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-journal-plus text-primary me-2"></i>{{ action_title }}
+                </h2>
+                <p class="text-muted mb-0 small">Define course module details, instructor allocation, and classroom placement.</p>
+            </div>
+            <a href="{% url 'courses:course_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Back to Catalog
+            </a>
+        </div>
+
+        <div class="card card-custom p-4 bg-white">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <h5 class="fw-bold text-primary mb-3 pb-2 border-bottom"><i class="bi bi-info-circle me-2"></i>Course Information</h5>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">Course Code <span class="text-danger">*</span></label>
+                        {{ form.course_code }}
+                        {% if form.course_code.errors %}<div class="text-danger small mt-1">{{ form.course_code.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold small">Course Title <span class="text-danger">*</span></label>
+                        {{ form.title }}
+                        {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold small">Credit Hours <span class="text-danger">*</span></label>
+                        {{ form.credit_hours }}
+                        {% if form.credit_hours.errors %}<div class="text-danger small mt-1">{{ form.credit_hours.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Department <span class="text-danger">*</span></label>
+                        {{ form.department }}
+                        {% if form.department.errors %}<div class="text-danger small mt-1">{{ form.department.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Assigned Instructor (Teacher)</label>
+                        {{ form.teacher }}
+                        {% if form.teacher.errors %}<div class="text-danger small mt-1">{{ form.teacher.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Target Class Room</label>
+                        {{ form.classroom }}
+                        {% if form.classroom.errors %}<div class="text-danger small mt-1">{{ form.classroom.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Academic Session</label>
+                        {{ form.session }}
+                        {% if form.session.errors %}<div class="text-danger small mt-1">{{ form.session.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">Course Description & Syllabus Overview</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between pt-3 border-top">
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm">
+                        <i class="bi bi-check2-circle me-1"></i> Save Course Module
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

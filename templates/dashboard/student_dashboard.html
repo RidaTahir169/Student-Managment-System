@@ -1,0 +1,414 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - SMS{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fw-bold text-dark mb-0">
+                <i class="bi bi-backpack4 text-success me-2"></i>Student Portal
+            </h2>
+            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-monospace fs-6">
+                {{ student_profile.admission_number|default:'STUDENT' }}
+            </span>
+        </div>
+        <p class="text-muted mb-0 small">
+            Welcome back, <strong>{{ user.get_full_name|default:user.username }}</strong> &bull; Class: <strong>{{ student_profile.classroom|default:'Unassigned' }}</strong> &bull; Roll No: <strong>{{ student_profile.roll_number|default:'N/A' }}</strong> &bull; {{ today|date:"l, F d, Y" }}
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        {% if student_profile %}
+        <a href="{% url 'academics:student_report_card' student_profile.pk %}" class="btn btn-success rounded-pill px-3 shadow-sm fw-medium">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i> My Transcript
+        </a>
+        <a href="{% url 'attendance:student_attendance' student_profile.pk %}" class="btn btn-outline-info rounded-pill px-3 fw-medium">
+            <i class="bi bi-calendar2-week me-1"></i> Attendance History
+        </a>
+        {% endif %}
+        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary rounded-pill px-3 fw-medium">
+            <i class="bi bi-person-gear me-1"></i> My Profile
+        </a>
+    </div>
+</div>
+
+<!-- Attendance Standing Banner -->
+{% if total_attendance > 0 %}
+    {% if is_shortage %}
+    <div class="alert alert-danger border-danger border-start border-4 shadow-sm mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-octagon-fill fs-3 text-danger me-3"></i>
+            <div>
+                <h6 class="fw-bold text-danger mb-1">
+                    Attendance Shortage Warning (<span class="fw-bolder">{{ attendance_pct }}%</span>)
+                </h6>
+                <span class="text-muted small">
+                    Your attendance is currently below the mandatory <strong>75%</strong> requirement ({{ present_count }} present out of {{ total_attendance }} total lecture sessions). Please attend upcoming classes to avoid academic penalties.
+                </span>
+            </div>
+        </div>
+        {% if student_profile %}
+        <div>
+            <a href="{% url 'attendance:student_attendance' student_profile.pk %}" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
+                <i class="bi bi-calendar-check me-1"></i> View Attendance Breakdown
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-success bg-success bg-opacity-10 border-success border-opacity-25 shadow-sm mb-4 d-flex align-items-center">
+        <i class="bi bi-check-circle-fill fs-4 text-success me-3"></i>
+        <div class="small text-success">
+            <strong>Good Attendance Standing!</strong> Your overall presence rate is <strong>{{ attendance_pct }}%</strong> ({{ present_count }} present out of {{ total_attendance }} recorded sessions), which satisfies the minimum institutional requirement.
+        </div>
+    </div>
+    {% endif %}
+{% endif %}
+
+<!-- Student Metrics KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-success h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Enrolled Courses</span>
+                    <h3 class="fw-bold text-success mt-1 mb-0">{{ total_courses }}</h3>
+                    <div class="text-muted small mt-1">Active Subjects</div>
+                </div>
+                <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
+                    <i class="bi bi-book-half fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 {% if is_shortage %}border-danger{% else %}border-info{% endif %} h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Overall Attendance</span>
+                    <h3 class="fw-bold {% if is_shortage %}text-danger{% else %}text-info{% endif %} mt-1 mb-0">
+                        {{ attendance_pct }}%
+                    </h3>
+                    <div class="text-muted small mt-1">
+                        {{ present_count }} Present / {{ total_attendance }} Total
+                    </div>
+                </div>
+                <div class="{% if is_shortage %}bg-danger text-danger{% else %}bg-info text-info{% endif %} bg-opacity-10 p-3 rounded-circle">
+                    <i class="bi bi-calendar-check fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-primary h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Cumulative GPA</span>
+                    <h3 class="fw-bold text-primary mt-1 mb-0">{{ cumulative_gpa }}</h3>
+                    <div class="text-muted small mt-1">Scale of 4.00</div>
+                </div>
+                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                    <i class="bi bi-mortarboard-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-warning h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Average Score</span>
+                    <h3 class="fw-bold text-warning mt-1 mb-0">{{ avg_percentage }}%</h3>
+                    <div class="text-muted small mt-1">{{ total_academic_records }} Assessment{{ total_academic_records|pluralize }}</div>
+                </div>
+                <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-circle">
+                    <i class="bi bi-award-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 1: Enrolled Courses & Student Profile -->
+<div class="row g-4 mb-4">
+    <!-- Left: Enrolled Courses Table -->
+    <div class="col-lg-8">
+        <div class="card card-custom p-4 bg-white shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-journal-bookmark text-success me-2"></i>My Enrolled Courses & Subjects
+                    </h5>
+                    <span class="text-muted small">Active semester coursework and assigned faculty instructors</span>
+                </div>
+                <span class="badge bg-light text-success border border-success border-opacity-25 px-3 py-1">
+                    {{ total_courses }} Course{{ total_courses|pluralize }}
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Subject Title</th>
+                            <th>Instructor</th>
+                            <th>Class Room</th>
+                            <th>Attendance</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in enrolled_courses_data %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-monospace fw-bold">
+                                    {{ item.course.course_code }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-dark">{{ item.course.title }}</span>
+                                <span class="small text-muted d-block">{{ item.course.credit_hours }} Credit Hours &bull; {{ item.course.department.name }}</span>
+                            </td>
+                            <td>
+                                <span class="small text-dark fw-medium">
+                                    {{ item.course.teacher.user.get_full_name|default:item.course.teacher.user.username|default:'TBA' }}
+                                </span>
+                                {% if item.course.teacher.designation %}
+                                    <span class="text-muted d-block" style="font-size: 0.75rem;">{{ item.course.teacher.designation }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ item.course.classroom|default:'Open Room' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress" style="width: 50px; height: 6px;">
+                                        <div class="progress-bar {% if item.attendance_rate >= 75 %}bg-success{% elif item.attendance_rate >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             style="width: {{ item.attendance_rate }}%;"></div>
+                                    </div>
+                                    <span class="small fw-semibold">{{ item.attendance_rate }}%</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'academics:course_gradebook' item.course.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-2" title="View Course Assessments">
+                                    <i class="bi bi-journal-text me-1"></i> Gradebook
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                                <i class="bi bi-book fs-1 d-block mb-2 text-secondary"></i>
+                                <p class="mb-0 fw-semibold">You are not currently enrolled in any academic courses.</p>
+                                <span class="small text-muted">Please contact your academic advisor or registrar.</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Student Profile Summary Card -->
+    <div class="col-lg-4">
+        <div class="card card-custom p-4 bg-white shadow-sm h-100">
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="bi bi-person-badge text-success me-2"></i>Scholar Profile
+            </h6>
+            <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="Profile" class="rounded-circle me-3 border border-2 border-success" style="width: 52px; height: 52px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center me-3" style="width: 52px; height: 52px;">
+                        <i class="bi bi-person-fill fs-3"></i>
+                    </div>
+                {% endif %}
+                <div>
+                    <h6 class="fw-bold text-dark mb-0">{{ user.get_full_name|default:user.username }}</h6>
+                    <span class="badge bg-light text-success border font-monospace">{{ student_profile.admission_number|default:'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="small">
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted">Assigned Class:</span>
+                    <span class="badge bg-light text-dark border">{{ student_profile.classroom|default:'Unassigned' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted">Roll Number:</span>
+                    <span class="fw-semibold text-dark">{{ student_profile.roll_number|default:'-' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted">Email:</span>
+                    <span class="text-dark">{{ user.email }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted">Blood Group:</span>
+                    <span class="badge bg-light text-danger border">{{ student_profile.blood_group|default:'-' }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted">Admission Date:</span>
+                    <span class="text-dark">{{ student_profile.admission_date|date:"M d, Y" }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted">Guardian Name:</span>
+                    <span class="text-dark">{{ student_profile.parent_name|default:'-' }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Emergency Contact:</span>
+                    <span class="text-dark">{{ student_profile.emergency_contact|default:student_profile.parent_phone|default:'-' }}</span>
+                </div>
+            </div>
+
+            <div class="mt-3 pt-2 border-top">
+                <a href="{% url 'accounts:profile' %}" class="btn btn-outline-dark btn-sm w-100 rounded-pill">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Profile Info
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 2: Academic Marks Feed & Recent Attendance Ledger -->
+<div class="row g-4">
+    <!-- Left: Recent Exam & Assessment Marks -->
+    <div class="col-lg-7">
+        <div class="card card-custom p-4 bg-white shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-award text-warning me-2"></i>Academic Results & Marks
+                    </h5>
+                    <span class="text-muted small">Latest assessment scores evaluated by faculty</span>
+                </div>
+                {% if student_profile %}
+                <a href="{% url 'academics:student_report_card' student_profile.pk %}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                    View Full Transcript
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Course</th>
+                            <th>Assessment</th>
+                            <th>Type</th>
+                            <th>Marks</th>
+                            <th>Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mark in recent_marks %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-light text-primary border font-monospace">{{ mark.course.course_code }}</span>
+                            </td>
+                            <td>
+                                <span class="small fw-semibold text-dark d-block">{{ mark.exam_name }}</span>
+                                <span class="text-muted" style="font-size: 0.75rem;">{{ mark.date_recorded|date:"M d, Y" }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ mark.get_exam_type_display }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ mark.marks_obtained }}</span>
+                                <span class="text-muted small">/ {{ mark.total_marks }}</span>
+                                <span class="text-muted d-block" style="font-size: 0.75rem;">{{ mark.percentage }}%</span>
+                            </td>
+                            <td>
+                                <span class="badge {% if mark.grade == 'A+' or mark.grade == 'A' %}bg-success{% elif mark.grade == 'B' %}bg-primary{% elif mark.grade == 'C' %}bg-secondary{% elif mark.grade == 'D' %}bg-warning text-dark{% else %}bg-danger{% endif %} px-2 py-1">
+                                    {{ mark.grade }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-file-earmark-x fs-3 d-block mb-1 text-secondary"></i>
+                                No examination marks recorded yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Recent Attendance Ledger -->
+    <div class="col-lg-5">
+        <div class="card card-custom p-4 bg-white shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-calendar2-check text-info me-2"></i>Recent Attendance
+                    </h5>
+                    <span class="text-muted small">Latest daily lecture roll call status</span>
+                </div>
+                {% if student_profile %}
+                <a href="{% url 'attendance:student_attendance' student_profile.pk %}" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                    Full Ledger
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Course</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in recent_attendance_logs %}
+                        <tr>
+                            <td>
+                                <span class="small fw-semibold text-dark">{{ log.date|date:"M d, Y" }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border font-monospace">{{ log.course.course_code }}</span>
+                            </td>
+                            <td>
+                                {% if log.status == 'PRESENT' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
+                                        <i class="bi bi-check-circle me-1"></i>Present
+                                    </span>
+                                {% elif log.status == 'ABSENT' %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">
+                                        <i class="bi bi-x-circle me-1"></i>Absent
+                                    </span>
+                                {% elif log.status == 'LATE' %}
+                                    <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 px-2 py-1">
+                                        <i class="bi bi-clock me-1"></i>Late
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
+                                        <i class="bi bi-shield-check me-1"></i>Excused
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="bi bi-calendar-x fs-3 d-block mb-1 text-secondary"></i>
+                                No attendance records logged yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

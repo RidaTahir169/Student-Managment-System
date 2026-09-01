@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Courses: {{ teacher.employee_id }} - SMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-journal-plus text-primary me-2"></i>Assign Courses to Faculty
+                </h2>
+                <p class="text-muted mb-0 small">Select and allocate academic modules to instructor <strong>{{ teacher.user.get_full_name|default:teacher.user.username }}</strong>.</p>
+            </div>
+            <a href="{% url 'teachers:teacher_detail' teacher.pk %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Back to Profile
+            </a>
+        </div>
+
+        <!-- Instructor Summary Banner -->
+        <div class="card card-custom p-3 bg-white mb-4 border-start border-4 border-primary">
+            <div class="d-flex align-items-center">
+                {% if teacher.user.profile_picture %}
+                    <img src="{{ teacher.user.profile_picture.url }}" alt="Profile" class="rounded-circle me-3 border" style="width: 50px; height: 50px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                        <i class="bi bi-person-fill fs-3"></i>
+                    </div>
+                {% endif %}
+                <div class="flex-grow-1">
+                    <h5 class="fw-bold text-dark mb-0">{{ teacher.user.get_full_name|default:teacher.user.username }}</h5>
+                    <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
+                        <span class="badge bg-light text-primary border border-primary border-opacity-25 font-monospace">{{ teacher.employee_id }}</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-dark">{{ teacher.designation }}</span>
+                        <span class="badge bg-light text-dark border"><i class="bi bi-building me-1"></i>{{ teacher.department|default:'No Department' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Assignment Form -->
+        <div class="card card-custom p-4 bg-white">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-journal-bookmark-fill text-primary me-2"></i>Available Courses Directory
+                    </h5>
+                    <span class="text-muted small">Check the box next to any course you wish to allocate.</span>
+                </div>
+
+                {% if form.errors %}
+                <div class="alert alert-danger small mb-3">
+                    {{ form.errors }}
+                </div>
+                {% endif %}
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40px;" class="ps-3">Assign</th>
+                                <th>Course Code</th>
+                                <th>Course Title</th>
+                                <th>Department</th>
+                                <th>Class Room</th>
+                                <th>Session</th>
+                                <th class="text-center">Credits</th>
+                                <th>Current Instructor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in all_courses %}
+                            <tr {% if course.teacher_id == teacher.id %}class="table-primary table-opacity-25"{% endif %}>
+                                <td class="ps-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="courses" value="{{ course.id }}" id="course_{{ course.id }}" {% if course.id in currently_assigned_ids %}checked{% endif %}>
+                                    </div>
+                                </td>
+                                <td>
+                                    <label class="form-check-label fw-bold font-monospace text-primary cursor-pointer" for="course_{{ course.id }}">
+                                        {{ course.course_code }}
+                                    </label>
+                                </td>
+                                <td>
+                                    <label class="form-check-label fw-semibold text-dark cursor-pointer d-block" for="course_{{ course.id }}">
+                                        {{ course.title }}
+                                    </label>
+                                </td>
+                                <td>
+                                    <span class="text-muted small">{{ course.department.code|default:'-' }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ course.classroom|default:'Unassigned' }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info bg-opacity-10 text-dark">{{ course.session|default:'-' }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-semibold text-dark">{{ course.credit_hours }}</span>
+                                </td>
+                                <td>
+                                    {% if course.teacher_id == teacher.id %}
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                                            <i class="bi bi-check-circle-fill me-1"></i>Assigned to this Teacher
+                                        </span>
+                                    {% elif course.teacher %}
+                                        <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25">
+                                            <i class="bi bi-person-fill me-1"></i>{{ course.teacher.user.get_full_name|default:course.teacher.employee_id }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="bi bi-dash-circle me-1"></i>Unassigned
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="bi bi-journal-x fs-3 d-block mb-2 text-secondary"></i>
+                                    No courses exist in the system yet. Please create courses first.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between pt-3 border-top">
+                    <a href="{% url 'teachers:teacher_detail' teacher.pk %}" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm">
+                        <i class="bi bi-check2-circle me-1"></i> Save Course Allocations
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

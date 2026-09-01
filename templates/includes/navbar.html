@@ -1,0 +1,70 @@
+<nav class="navbar navbar-expand-lg sms-navbar sticky-top">
+    <div class="container-fluid px-3 px-lg-4">
+        <!-- Sidebar Toggle (Mobile & Tablet) -->
+        {% if user.is_authenticated %}
+        <button class="btn btn-link text-dark p-0 me-3 d-lg-none" type="button" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
+            <i class="bi bi-list fs-3"></i>
+        </button>
+        {% endif %}
+
+        <!-- Brand Identity -->
+        <a class="navbar-brand d-flex align-items-center me-auto me-lg-4" href="{% url 'dashboard:index' %}">
+            <div class="bg-primary text-white rounded-3 p-1 d-flex align-items-center justify-content-center me-2" style="width: 34px; height: 34px;">
+                <i class="bi bi-mortarboard-fill fs-5"></i>
+            </div>
+            <span class="sms-brand-text">EduManage <span class="badge bg-primary bg-opacity-10 text-primary fs-6 fw-normal">SMS</span></span>
+        </a>
+
+        <!-- Right Side Nav Actions -->
+        <div class="d-flex align-items-center">
+            {% if user.is_authenticated %}
+                <!-- Role Badge -->
+                <span class="badge rounded-pill {% if user.is_superuser or user.role == 'ADMIN' %}badge-role-admin{% elif user.role == 'TEACHER' %}badge-role-teacher{% else %}badge-role-student{% endif %} px-3 py-1 me-3 d-none d-sm-inline-block">
+                    <i class="bi bi-shield-check me-1"></i> {{ user.get_role_display|default:'Admin' }}
+                </span>
+
+                <!-- User Dropdown Menu -->
+                <div class="dropdown">
+                    <button class="btn btn-light bg-white border dropdown-toggle d-flex align-items-center py-1 px-2 rounded-pill shadow-sm" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover;">
+                        {% else %}
+                            <i class="bi bi-person-circle fs-5 text-secondary me-2"></i>
+                        {% endif %}
+                        <span class="small fw-semibold text-dark me-1">{{ user.first_name|default:user.username }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3" aria-labelledby="userMenuDropdown">
+                        <li class="px-3 py-2 border-bottom">
+                            <p class="mb-0 small fw-bold text-dark">{{ user.get_full_name|default:user.username }}</p>
+                            <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ user.email }}</p>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2" href="{% url 'accounts:profile' %}">
+                                <i class="bi bi-person-gear me-2 text-primary"></i> Edit Profile
+                            </a>
+                        </li>
+                        {% if user.is_superuser or user.role == 'ADMIN' %}
+                        <li>
+                            <a class="dropdown-item py-2" href="{% url 'admin:index' %}" target="_blank">
+                                <i class="bi bi-database-fill-gear me-2 text-danger"></i> Django Admin
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item py-2 text-danger" href="{% url 'accounts:logout' %}">
+                                <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            {% else %}
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-sm px-3 rounded-pill fw-medium">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</nav>

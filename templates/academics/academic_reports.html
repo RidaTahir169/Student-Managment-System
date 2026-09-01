@@ -1,0 +1,406 @@
+{% extends 'base.html' %}
+
+{% block title %}Academic Performance Reports - SMS{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="bi bi-graph-up-arrow text-primary me-2"></i>Academic Performance Reports
+        </h2>
+        <p class="text-muted mb-0 small">Institutional grade analytics, course benchmarks, honor roll scholars, and academic support tracking.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'academics:record_list' %}" class="btn btn-outline-secondary rounded-pill px-3 fw-medium">
+            <i class="bi bi-journal-text me-1"></i> Marks Ledger
+        </a>
+        {% if user.is_superuser or user.role == 'ADMIN' or user.role == 'TEACHER' %}
+        <a href="{% url 'academics:record_create' %}" class="btn btn-primary rounded-pill px-3 shadow-sm fw-medium">
+            <i class="bi bi-plus-circle me-1"></i> Enter Marks
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Department & Session Filter Bar -->
+<div class="card card-custom p-3 bg-white mb-4 shadow-sm">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <label class="form-label small fw-semibold text-muted mb-1">Filter by Department</label>
+            <select name="department" class="form-select form-select-sm bg-light">
+                <option value="">-- All Departments --</option>
+                {% for d in departments %}
+                <option value="{{ d.id }}" {% if department_id == d.id|stringformat:"s" %}selected{% endif %}>
+                    {{ d.name }} ({{ d.code }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-5">
+            <label class="form-label small fw-semibold text-muted mb-1">Filter by Academic Session</label>
+            <select name="session" class="form-select form-select-sm bg-light">
+                <option value="">-- All Academic Sessions --</option>
+                {% for s in sessions %}
+                <option value="{{ s.id }}" {% if session_id == s.id|stringformat:"s" %}selected{% endif %}>
+                    {{ s.name }} {% if s.is_current %}(Current){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 d-flex gap-1 align-items-end" style="padding-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary btn-sm flex-grow-1" title="Apply Filter">
+                <i class="bi bi-funnel-fill me-1"></i> Filter
+            </button>
+            <a href="{% url 'academics:academic_reports' %}" class="btn btn-outline-secondary btn-sm" title="Reset Filters">
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- KPI Metrics Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-primary h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Assessments Evaluated</span>
+                    <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_assessments }}</h3>
+                    <div class="text-muted small mt-1">Recorded Marks Entries</div>
+                </div>
+                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                    <i class="bi bi-file-earmark-spreadsheet-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-success h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Mean Score</span>
+                    <h3 class="fw-bold text-success mt-1 mb-0">{{ avg_percentage }}%</h3>
+                    <div class="text-success small mt-1"><i class="bi bi-graph-up me-1"></i>Institutional Average</div>
+                </div>
+                <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
+                    <i class="bi bi-percent fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-info h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Mean GPA</span>
+                    <h3 class="fw-bold text-info mt-1 mb-0">{{ avg_gpa }}</h3>
+                    <div class="text-muted small mt-1">Scale of 4.00</div>
+                </div>
+                <div class="bg-info bg-opacity-10 text-info p-3 rounded-circle">
+                    <i class="bi bi-mortarboard-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-custom p-3 bg-white border-start border-4 border-warning h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Passing Rate</span>
+                    <h3 class="fw-bold text-warning mt-1 mb-0">{{ pass_rate }}%</h3>
+                    <div class="text-muted small mt-1">{{ passing_count }} Passed / {{ failing_count }} Failed</div>
+                </div>
+                <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-circle">
+                    <i class="bi bi-check2-circle fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grade Distribution & Summary Row -->
+<div class="row g-4 mb-4">
+    <!-- Grade Distribution Breakdown -->
+    <div class="col-lg-8">
+        <div class="card card-custom p-4 bg-white shadow-sm h-100">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="bi bi-pie-chart text-primary me-2"></i>Institutional Grade Distribution
+            </h5>
+            <div class="row g-3 text-center">
+                <div class="col-4 col-md-2">
+                    <div class="p-3 rounded bg-success bg-opacity-10 border border-success border-opacity-25">
+                        <span class="badge bg-success mb-2 px-3 py-1 fs-6">A+</span>
+                        <h4 class="fw-bold text-dark mb-0">{{ grade_distribution.A_plus }}</h4>
+                        <span class="small text-muted">&ge; 90%</span>
+                    </div>
+                </div>
+                <div class="col-4 col-md-2">
+                    <div class="p-3 rounded bg-success bg-opacity-10 border border-success border-opacity-25">
+                        <span class="badge bg-success mb-2 px-3 py-1 fs-6">A</span>
+                        <h4 class="fw-bold text-dark mb-0">{{ grade_distribution.A }}</h4>
+                        <span class="small text-muted">80 - 89%</span>
+                    </div>
+                </div>
+                <div class="col-4 col-md-2">
+                    <div class="p-3 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                        <span class="badge bg-primary mb-2 px-3 py-1 fs-6">B</span>
+                        <h4 class="fw-bold text-dark mb-0">{{ grade_distribution.B }}</h4>
+                        <span class="small text-muted">70 - 79%</span>
+                    </div>
+                </div>
+                <div class="col-4 col-md-2">
+                    <div class="p-3 rounded bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                        <span class="badge bg-secondary mb-2 px-3 py-1 fs-6">C</span>
+                        <h4 class="fw-bold text-dark mb-0">{{ grade_distribution.C }}</h4>
+                        <span class="small text-muted">60 - 69%</span>
+                    </div>
+                </div>
+                <div class="col-4 col-md-2">
+                    <div class="p-3 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25">
+                        <span class="badge bg-warning text-dark mb-2 px-3 py-1 fs-6">D</span>
+                        <h4 class="fw-bold text-dark mb-0">{{ grade_distribution.D }}</h4>
+                        <span class="small text-muted">50 - 59%</span>
+                    </div>
+                </div>
+                <div class="col-4 col-md-2">
+                    <div class="p-3 rounded bg-danger bg-opacity-10 border border-danger border-opacity-25">
+                        <span class="badge bg-danger mb-2 px-3 py-1 fs-6">F</span>
+                        <h4 class="fw-bold text-danger mb-0">{{ grade_distribution.F }}</h4>
+                        <span class="small text-muted">&lt; 50%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Bounds Card -->
+    <div class="col-lg-4">
+        <div class="card card-custom p-4 bg-white shadow-sm h-100">
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="bi bi-speedometer2 text-info me-2"></i>Performance Highs & Lows
+            </h6>
+            <div class="d-flex flex-column justify-content-around h-75">
+                <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light mb-2">
+                    <span class="text-muted small fw-medium">Highest Recorded Score:</span>
+                    <span class="badge bg-success fs-6">{{ highest_score }}%</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light mb-2">
+                    <span class="text-muted small fw-medium">Lowest Recorded Score:</span>
+                    <span class="badge bg-danger fs-6">{{ lowest_score }}%</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                    <span class="text-muted small fw-medium">Passing Ratio:</span>
+                    <span class="fw-bold text-dark">{{ passing_count }} / {{ total_assessments }} ({{ pass_rate }}%)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Course Performance Summary Table -->
+<div class="card card-custom p-4 bg-white shadow-sm mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="bi bi-journal-check text-primary me-2"></i>Course Performance Benchmarks
+            </h5>
+            <span class="text-muted small">Comparative overview of mean scores, GPA, and pass rates per course module</span>
+        </div>
+        <span class="badge bg-light text-primary border px-3 py-1">
+            {{ course_performance|length }} Course{{ course_performance|length|pluralize }}
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Course Code</th>
+                    <th>Subject Title</th>
+                    <th>Department</th>
+                    <th>Instructor</th>
+                    <th>Enrolled</th>
+                    <th>Assessments</th>
+                    <th>Avg Score</th>
+                    <th>Avg GPA</th>
+                    <th>Pass Rate</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in course_performance %}
+                <tr>
+                    <td>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace fw-bold">
+                            {{ item.course.course_code }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="fw-semibold text-dark">{{ item.course.title }}</span>
+                        <span class="small text-muted d-block">{{ item.course.credit_hours }} Credit Hours</span>
+                    </td>
+                    <td><span class="small text-dark">{{ item.course.department.name }}</span></td>
+                    <td>
+                        <span class="small text-dark fw-medium">
+                            {{ item.course.teacher.user.get_full_name|default:item.course.teacher.user.username|default:'Unassigned' }}
+                        </span>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ item.enrolled_count }}</span></td>
+                    <td><span class="badge bg-light text-primary border">{{ item.total_assessments }}</span></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress" style="width: 50px; height: 6px;">
+                                <div class="progress-bar {% if item.avg_percentage >= 75 %}bg-success{% elif item.avg_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                     style="width: {{ item.avg_percentage }}%;"></div>
+                            </div>
+                            <span class="small fw-semibold">{{ item.avg_percentage }}%</span>
+                        </div>
+                    </td>
+                    <td><span class="fw-bold text-dark">{{ item.avg_gpa }}</span></td>
+                    <td>
+                        <span class="badge {% if item.pass_rate >= 75 %}bg-success{% elif item.pass_rate >= 50 %}bg-warning text-dark{% else %}bg-danger{% endif %} px-2 py-1">
+                            {{ item.pass_rate }}%
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'academics:course_gradebook' item.course.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-2">
+                            <i class="bi bi-award me-1"></i> Gradebook
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-5">
+                        <i class="bi bi-journal-x fs-1 d-block mb-2 text-secondary"></i>
+                        No course benchmark records found for the selected filters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Lower Section: Honor Roll & At-Risk Scholars -->
+<div class="row g-4">
+    <!-- Left: Honor Roll (Top Performers) -->
+    <div class="col-lg-6">
+        <div class="card card-custom p-4 bg-white shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-trophy-fill text-warning me-2"></i>Academic Honor Roll (Top Achievers)
+                </h5>
+                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 px-2 py-1">
+                    &ge; 80% Average
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th>Assessments</th>
+                            <th>Avg Score</th>
+                            <th>GPA</th>
+                            <th class="text-end">Transcript</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in top_students %}
+                        <tr>
+                            <td>
+                                <span class="fw-semibold text-dark d-block small">
+                                    {{ s.student.user.get_full_name|default:s.student.user.username }}
+                                </span>
+                                <span class="text-muted font-monospace" style="font-size: 0.75rem;">
+                                    {{ s.student.admission_number }}
+                                </span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ s.student.classroom|default:'-' }}</span></td>
+                            <td><span class="badge bg-light text-primary border">{{ s.total_exams }}</span></td>
+                            <td><span class="fw-bold text-success">{{ s.avg_percentage }}%</span></td>
+                            <td><span class="fw-bold text-primary">{{ s.avg_gpa }}</span></td>
+                            <td class="text-end">
+                                <a href="{% url 'academics:student_report_card' s.student.pk %}" class="btn btn-sm btn-outline-success py-0 px-2" title="View Transcript">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No students currently meet the Honor Roll threshold.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Academic Intervention Required (At-Risk) -->
+    <div class="col-lg-6">
+        <div class="card card-custom p-4 bg-white shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-danger mb-0">
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Academic Support Needed (At-Risk)
+                </h5>
+                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">
+                    &lt; 50% Average
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th>Assessments</th>
+                            <th>Avg Score</th>
+                            <th>GPA</th>
+                            <th class="text-end">Transcript</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in at_risk_students %}
+                        <tr>
+                            <td>
+                                <span class="fw-semibold text-dark d-block small">
+                                    {{ s.student.user.get_full_name|default:s.student.user.username }}
+                                </span>
+                                <span class="text-muted font-monospace" style="font-size: 0.75rem;">
+                                    {{ s.student.admission_number }}
+                                </span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ s.student.classroom|default:'-' }}</span></td>
+                            <td><span class="badge bg-light text-danger border">{{ s.total_exams }}</span></td>
+                            <td><span class="fw-bold text-danger">{{ s.avg_percentage }}%</span></td>
+                            <td><span class="fw-bold text-danger">{{ s.avg_gpa }}</span></td>
+                            <td class="text-end">
+                                <a href="{% url 'academics:student_report_card' s.student.pk %}" class="btn btn-sm btn-outline-danger py-0 px-2" title="View Transcript">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4 text-success">
+                                <i class="bi bi-check-circle fs-4 d-block mb-1"></i>
+                                No at-risk scholars detected. All evaluated students maintain passing averages.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

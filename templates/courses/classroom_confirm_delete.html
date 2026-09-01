@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Class Deletion - SMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-4">
+    <div class="col-md-7 col-lg-6">
+        <div class="card card-custom p-4 bg-white border-top border-4 border-danger">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle mb-3" style="width: 70px; height: 70px;">
+                    <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+                </div>
+                <h4 class="fw-bold text-dark">Confirm Class Room Deletion</h4>
+                <p class="text-muted small mb-0">This action will remove the class cohort from the database.</p>
+            </div>
+
+            <div class="bg-light rounded-3 p-3 mb-4">
+                <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                        <i class="bi bi-door-open-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">{{ classroom.name }}</h5>
+                        <span class="badge bg-light text-primary border font-monospace">{{ classroom.section }}</span>
+                    </div>
+                </div>
+                <div class="small">
+                    <p class="mb-1 text-muted"><strong>Department:</strong> {{ classroom.department|default:'General' }}</p>
+                    <p class="mb-0 text-muted"><strong>Assigned Students:</strong> {{ classroom.students.count }} Scholars</p>
+                </div>
+            </div>
+
+            <div class="alert alert-warning small mb-4">
+                <i class="bi bi-info-circle-fill me-1"></i>
+                Deleting this class room will unassign any students currently in this section (their student records will be preserved safely).
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'courses:classroom_detail' classroom.pk %}" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-arrow-left me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger px-4 fw-semibold shadow-sm">
+                        <i class="bi bi-trash-fill me-1"></i> Permanently Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
