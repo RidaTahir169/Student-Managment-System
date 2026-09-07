@@ -4,6 +4,7 @@ Django settings for Student Management System project.
 
 from pathlib import Path
 import os
+import sys
 import dj_database_url
 from django.contrib.messages import constants as messages
 
@@ -153,17 +154,20 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# WhiteNoise storage for compressed, cached static asset delivery
+# WhiteNoise storage for compressed, cached static asset delivery (regular StaticFilesStorage during tests)
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'
+        if 'test' in sys.argv
+        else 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
 
 WHITENOISE_MANIFEST_STRICT = False
+WHITENOISE_USE_FINDERS = True
 
 # Media files (User uploads like profile pictures)
 MEDIA_URL = '/media/'
