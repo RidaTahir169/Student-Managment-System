@@ -95,3 +95,46 @@ class CustomUser(AbstractUser):
             self.email = self.email.strip().lower()
         super().save(*args, **kwargs)
 
+
+class Customer(models.Model):
+    """
+    Customer profile model linked 1-to-1 with CustomUser.
+    Stored explicitly in database table 'account_customer'.
+    """
+    user = models.OneToOneField(
+        'accounts.CustomUser',
+        on_delete=models.CASCADE,
+        related_name='customer_profile',
+        verbose_name=_('User')
+    )
+    phone = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        help_text=_('Customer contact phone number.')
+    )
+    address = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_('Customer physical address.')
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_('Created At')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_('Updated At')
+    )
+
+    class Meta:
+        db_table = 'account_customer'
+        verbose_name = _('Customer')
+        verbose_name_plural = _('Customers')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        full_name = self.user.get_full_name() if self.user else ''
+        return f"{full_name or self.user.username} (Customer)"
+
+
