@@ -106,19 +106,13 @@ if DATABASE_URL:
             conn_health_checks=True,
         )
     }
-elif DEBUG:
+else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-else:
-    from django.core.exceptions import ImproperlyConfigured
-    raise ImproperlyConfigured(
-        "DATABASE_URL environment variable is not set. "
-        "In production (DEBUG=False), a valid PostgreSQL DATABASE_URL must be provided."
-    )
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.CustomUser'
@@ -168,6 +162,8 @@ STORAGES = {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
+
+WHITENOISE_MANIFEST_STRICT = False
 
 # Media files (User uploads like profile pictures)
 MEDIA_URL = '/media/'

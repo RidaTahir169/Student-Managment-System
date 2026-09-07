@@ -38,3 +38,6 @@ celerybeat.pid
 .DS_Store
 Thumbs.db
 
+# Nested duplicate folder
+Student Management System/
+
